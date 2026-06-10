@@ -143,15 +143,30 @@ function PlaceholderLandmarkModel({ landmark }) {
 function LandmarkModel({ landmark }) {
   const selectLandmark = useAppStore((state) => state.selectLandmark);
   const language = useAppStore((state) => state.language);
+  const nearbyLandmarkId = useAppStore((state) => state.nearbyLandmarkId);
+  const guidedTourLandmarkId = useAppStore((state) => state.guidedTourLandmarkId);
+  const activeRouteIds = useAppStore((state) => state.activeRouteIds);
+  const routeProgress = useAppStore((state) => state.routeProgress);
   useTerrainData();
   const baseY = worldPosToHeight(landmark.position[0], landmark.position[2]);
   const displayName = travelLandmarkMeta[landmark.id]?.name?.[language] ?? landmark.name;
+  const displayRouteIds = activeRouteIds.length ? activeRouteIds : ['milan_duomo', 'venice_rialto', 'florence_duomo', 'pisa', 'colosseum', 'pompeii'];
+  const routeIndex = displayRouteIds.indexOf(landmark.id);
+  const routeCount = displayRouteIds.length || 1;
+  const estimatedCurrentIndex = Math.min(Math.floor(routeProgress * Math.max(routeCount - 1, 1)), routeCount - 1);
+  const isRouteFocus = routeIndex === estimatedCurrentIndex || routeIndex === estimatedCurrentIndex + 1;
+  const isActiveStop = landmark.id === nearbyLandmarkId || landmark.id === guidedTourLandmarkId;
+  const isHighlighted = isActiveStop || isRouteFocus;
 
   return (
     <group position={[landmark.position[0], baseY, landmark.position[2]]} rotation={landmark.rotation} onClick={() => selectLandmark(landmark.id)}>
+      <mesh position={[0, 0.018, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <cylinderGeometry args={[landmark.triggerRadius * 0.34, landmark.triggerRadius * 0.42, 0.035, 8]} />
+        <meshStandardMaterial color={isActiveStop ? '#d6c49a' : '#b8aa8a'} roughness={0.86} transparent opacity={isActiveStop ? 0.52 : 0.28} />
+      </mesh>
       <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[landmark.triggerRadius * 0.28, landmark.triggerRadius * 0.42, 64]} />
-        <meshBasicMaterial color="#7ed0e4" transparent opacity={0.28} depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
+        <meshBasicMaterial color={isActiveStop ? '#f0d490' : '#7ed0e4'} transparent opacity={isActiveStop ? 0.44 : 0.22} depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
       </mesh>
       <mesh position={[0, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[landmark.triggerRadius * 0.24, 48]} />
@@ -163,9 +178,13 @@ function LandmarkModel({ landmark }) {
         <cylinderGeometry args={[landmark.triggerRadius * 0.45, landmark.triggerRadius * 0.45, 6, 20]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
-      <Html position={[0, 4.2, 0]} center distanceFactor={28} transform={false} sprite>
-        <div className="landmark-chip">{displayName}</div>
-      </Html>
+      {isHighlighted && (
+        <Html position={[0, 3.8, 0]} center distanceFactor={18} transform={false} sprite occlude={false}>
+          <div className={`landmark-chip ${isActiveStop ? 'is-active' : ''}`}>
+            {displayName}
+          </div>
+        </Html>
+      )}
     </group>
   );
 }

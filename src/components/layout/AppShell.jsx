@@ -67,7 +67,7 @@ export function AppShell({ children, isStarted, onStart, onClose }) {
         <div className="app-shell__glow app-shell__glow--right" aria-hidden="true" />
         <div className="intro-grain" aria-hidden="true" />
         <div className="app-shell__scene">{children}</div>
-        <UIOverlay isStarted={isStarted} />
+        <UIOverlay isStarted={isStarted} onClose={onClose} />
         {introVisible && <IntroOverlay onStart={onStart} copy={copy} isExiting={introExiting} />}
       </div>
     </div>
