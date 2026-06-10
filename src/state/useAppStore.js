@@ -26,8 +26,20 @@ export const useAppStore = create((set, get) => ({
   sidebarOpen: true,
   focusPanelOpen: false,
   modelViewerOpen: false,
+  cesiumStatus: {
+    terrain: 'idle',
+    imagery: 'idle',
+    buildings: 'idle',
+    ready: false,
+    error: '',
+  },
   setLanguage: (language) => set({ language }),
-  setCameraMode: (cameraMode) => set({ cameraMode }),
+  setCesiumStatus: (patch) => set((state) => ({
+    cesiumStatus: { ...state.cesiumStatus, ...patch },
+  })),
+  setCameraMode: (cameraMode) => set((state) => (
+    state.cameraMode === cameraMode ? state : { cameraMode }
+  )),
   toggleMapView: () => {
     const { cameraMode, selectedLandmarkId, focusPanelOpen, modelViewerOpen } = get();
     if (focusPanelOpen || modelViewerOpen) return;

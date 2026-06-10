@@ -3,8 +3,17 @@ export const MAP_BOUNDS = {
   lonMax: 18.5,
   latMin: 36.6,
   latMax: 47.1,
+  worldWidth: 132,
   worldSize: 170,
 };
+
+// The Italy map spans roughly 1,200 km north-to-south and 990 km east-to-west.
+// A single scene unit therefore represents about 7.1 km on the ground.
+export const WORLD_METERS_PER_UNIT = 7100;
+
+export function worldUnitsFromMeters(meters) {
+  return meters / WORLD_METERS_PER_UNIT;
+}
 
 function mercY(lat) {
   return Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
@@ -16,11 +25,11 @@ const MERC_Y_MAX = mercY(MAP_BOUNDS.latMax);
 export function lngLatToWorld(lon, lat) {
   const tx = (lon - MAP_BOUNDS.lonMin) / (MAP_BOUNDS.lonMax - MAP_BOUNDS.lonMin);
   const tz = 1 - (mercY(lat) - MERC_Y_MIN) / (MERC_Y_MAX - MERC_Y_MIN);
-  return [(tx - 0.5) * MAP_BOUNDS.worldSize, 0, (tz - 0.5) * MAP_BOUNDS.worldSize];
+  return [(tx - 0.5) * MAP_BOUNDS.worldWidth, 0, (tz - 0.5) * MAP_BOUNDS.worldSize];
 }
 
 export function worldToLngLat(worldX, worldZ) {
-  const tx = worldX / MAP_BOUNDS.worldSize + 0.5;
+  const tx = worldX / MAP_BOUNDS.worldWidth + 0.5;
   const tz = worldZ / MAP_BOUNDS.worldSize + 0.5;
   const lon = MAP_BOUNDS.lonMin + tx * (MAP_BOUNDS.lonMax - MAP_BOUNDS.lonMin);
   const merc = MERC_Y_MIN + (1 - tz) * (MERC_Y_MAX - MERC_Y_MIN);

@@ -374,7 +374,7 @@
 .focus-side {
   background: linear-gradient(90deg, rgba(244,249,252,0.72), rgba(244,249,252,0.22) 78%, transparent);
   border-right: 1px solid rgba(8, 24, 39, 0.1);
-  padding: 96px 30px 30px;
+  padding: 124px 30px 30px;
 }
 
 .focus-side--right {
@@ -428,4 +428,74 @@
 .app-shell.is-zh .mv-title {
   font-family: var(--font-display-zh);
   line-height: 1.15;
+}
+
+/* Nearby POI briefing sits above the route timeline instead of competing with the top-left HUD. */
+.poi-side {
+  top: auto;
+  right: auto;
+  bottom: 138px;
+  left: 24px;
+  width: min(360px, calc(100vw - 48px));
+  transform: translateY(18px);
+  z-index: 28;
+}
+
+.poi-side.is-visible {
+  transform: translateY(0);
+}
+
+.poi-side__panel {
+  max-height: 176px;
+  overflow: hidden;
+  padding: 16px 18px;
+  border: 1px solid rgba(8, 24, 39, 0.14);
+  border-left: 3px solid rgba(185, 129, 82, 0.82);
+  background: rgba(244, 249, 252, 0.9);
+  box-shadow: 0 14px 36px rgba(8, 24, 39, 0.14);
+  backdrop-filter: blur(12px);
+}
+
+.poi-side__title {
+  margin-bottom: 6px;
+  font-size: clamp(20px, 2vw, 26px);
+}
+
+.poi-side__body {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-height: 1.55;
+}
+
+body.poi-briefing-visible .hud-hints {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 780px) {
+  .poi-side {
+    top: auto;
+    right: 10px;
+    bottom: 118px;
+    left: 10px;
+    width: auto;
+  }
+
+  .poi-side__panel {
+    max-height: min(180px, 30vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .poi-side__body {
+    display: block;
+    overflow: visible;
+  }
+
+  body.poi-briefing-visible .tour-info-panel {
+    opacity: 0;
+    pointer-events: none;
+  }
 }

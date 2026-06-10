@@ -14,6 +14,78 @@ body {
   margin: 0;
 }
 
+.cesium-drive-scene,
+.cesium-drive-scene__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cesium-drive-scene {
+  overflow: hidden;
+  background: #86b9d2;
+}
+
+.cesium-drive-scene__canvas .cesium-viewer,
+.cesium-drive-scene__canvas .cesium-viewer-cesiumWidgetContainer,
+.cesium-drive-scene__canvas .cesium-widget,
+.cesium-drive-scene__canvas canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.cesium-drive-scene__loading,
+.cesium-drive-scene__error {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 8;
+  display: grid;
+  gap: 8px;
+  min-width: min(360px, calc(100vw - 40px));
+  padding: 18px 22px;
+  border: 1px solid rgba(25, 45, 68, 0.2);
+  border-radius: 18px;
+  background: rgba(250, 248, 240, 0.88);
+  box-shadow: 0 18px 46px rgba(19, 43, 63, 0.2);
+  color: #182e42;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  backdrop-filter: blur(16px);
+}
+
+.cesium-drive-scene__loading strong,
+.cesium-drive-scene__error strong {
+  font: 700 15px/1.2 var(--font-ui);
+}
+
+.cesium-drive-scene__loading span,
+.cesium-drive-scene__error span {
+  font: 500 12px/1.5 var(--font-ui);
+  color: #52677b;
+}
+
+.cesium-drive-scene__error {
+  border-color: rgba(150, 60, 52, 0.28);
+}
+
+.cesium-drive-scene__loading.is-streaming {
+  top: auto;
+  bottom: 112px;
+  padding: 10px 16px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.cesium-drive-scene__loading.is-streaming strong {
+  font-size: 13px;
+}
+
+.cesium-drive-scene__loading.is-streaming span {
+  font-size: 11px;
+}
+
 body:not(.drive-open) {
   overflow-x: hidden;
   overflow-y: auto;
@@ -43,7 +115,7 @@ body:not(.drive-open) {
 .drive-overlay {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 1000;
   backdrop-filter: blur(8px);
 }
 
@@ -52,21 +124,37 @@ body:not(.drive-open) {
   top: 24px;
   left: 24px;
   z-index: 220;
-  min-height: auto;
-  padding: 0 0 8px;
-  border-radius: 0;
-  border: 0;
-  border-bottom: 1px solid rgba(8, 24, 39, 0.18);
-  background: transparent;
-  color: var(--c-ink);
-  font: 600 11px/1 var(--font-ui);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 16px 7px;
+  border: 3px solid var(--sketch-ink);
+  border-radius: 255px 18px 225px 16px / 18px 225px 16px 255px;
+  background: var(--sketch-paper);
+  box-shadow: 4px 4px 0 var(--sketch-ink);
+  color: var(--sketch-ink);
+  font: 700 16px/1 var(--font-sketch);
+  letter-spacing: 0.04em;
+  text-transform: none;
   cursor: pointer;
+  transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease, color 100ms ease;
+}
+
+.drive-overlay__close:hover {
+  transform: translate(2px, 2px) rotate(-1deg);
+  box-shadow: 2px 2px 0 var(--sketch-ink);
+  background: var(--sketch-red);
+  color: #fff;
+}
+
+.drive-overlay__close:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
 }
 
 .app-shell .btn-map-view {
-  top: 62px;
+  top: 84px;
   left: 24px;
 }
 

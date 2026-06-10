@@ -43,8 +43,8 @@ export function SceneLights() {
         position={[42, 58, 24]}
         intensity={1.18}
         color={THEME.sun}
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
       />
       <Environment resolution={128}>
         <Lightformer form="ring" intensity={1.4} color="#f5d99b" scale={12} position={[0, 10, -20]} />

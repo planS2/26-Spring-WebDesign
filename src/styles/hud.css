@@ -236,7 +236,7 @@
    HUD - MAP VIEW BUTTON
    ============================================================ */
 .btn-map-view {
-  position: fixed; top: 20px; left: 20px; z-index: 25;
+  position: fixed; top: 84px; left: 24px; z-index: 25;
   display: flex; align-items: center; gap: 7px;
   padding: 9px 16px;
   border: 1px solid rgba(22, 42, 68, 0.16); border-radius: var(--radius-pill);
@@ -319,6 +319,334 @@ body.ui-awake .hud-mode {
     right: auto;
     bottom: 104px;
     max-width: calc(100vw - 28px);
+  }
+}
+
+/* Hand-drawn route UI. Visual-only overrides; existing controls keep their behavior. */
+.app-shell {
+  --drive-paper: rgba(253, 251, 247, 0.94);
+  --drive-ink: var(--sketch-ink);
+  --drive-muted: var(--sketch-muted);
+  --drive-red: var(--sketch-red);
+  --drive-blue: var(--sketch-blue);
+  font-family: var(--font-sketch);
+}
+
+.app-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(45, 45, 45, 0.13) 0.8px, transparent 0.8px);
+  background-size: 24px 24px;
+  opacity: 0.28;
+  mix-blend-mode: multiply;
+}
+
+.drive-overlay__close {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 16px 7px;
+  border: 3px solid var(--drive-ink);
+  border-radius: 255px 18px 225px 16px / 18px 225px 16px 255px;
+  background: var(--drive-paper);
+  box-shadow: 4px 4px 0 var(--drive-ink);
+  color: var(--drive-ink);
+  font: 700 16px/1 var(--font-sketch);
+  letter-spacing: 0.04em;
+  text-transform: none;
+  transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease, color 100ms ease;
+}
+
+.drive-overlay__close:hover {
+  transform: translate(2px, 2px) rotate(-1deg);
+  box-shadow: 2px 2px 0 var(--drive-ink);
+  background: var(--drive-red);
+  color: #fff;
+}
+
+.drive-overlay__close:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+.hud-title {
+  top: 20px;
+  padding: 7px 18px 5px;
+  border-bottom: 3px solid var(--drive-red);
+  color: var(--drive-ink);
+  font: 700 22px/1 var(--font-sketch-title);
+  letter-spacing: 0;
+  transform: translateX(-50%) rotate(-1deg);
+}
+
+.hud-mode {
+  top: 60px;
+  color: var(--drive-blue);
+  font: 700 13px/1 var(--font-sketch);
+  letter-spacing: 0.08em;
+}
+
+.guided-tour-status,
+.tour-info-panel,
+.arrival-card,
+.route-timeline,
+.timeline-popover,
+.tour-summary-card {
+  border: 3px solid var(--drive-ink);
+  background:
+    radial-gradient(rgba(45, 45, 45, 0.1) 0.7px, transparent 0.7px),
+    var(--drive-paper);
+  background-size: 18px 18px, auto;
+  box-shadow: 5px 5px 0 var(--drive-ink);
+  backdrop-filter: none;
+  color: var(--drive-ink);
+}
+
+.guided-tour-status {
+  top: 78px;
+  border-radius: 18px 255px 20px 225px / 225px 20px 255px 18px;
+  transform: translateX(-50%) translateY(-8px) rotate(0.6deg);
+}
+
+.guided-tour-status.is-visible {
+  transform: translateX(-50%) translateY(0) rotate(0.6deg);
+}
+
+.guided-tour-status span,
+.tour-info-panel__eyebrow,
+.route-timeline > p,
+.arrival-card > p,
+.timeline-popover > p,
+.tour-summary-card > p {
+  color: var(--drive-red);
+  font: 700 13px/1 var(--font-sketch);
+  letter-spacing: 0.08em;
+}
+
+.guided-tour-status strong,
+.tour-info-panel h2,
+.arrival-card h2,
+.timeline-popover h2,
+.tour-summary-card h2 {
+  color: var(--drive-ink);
+  font-family: var(--font-sketch-title);
+}
+
+.tour-info-panel {
+  top: 106px;
+  right: 22px;
+  width: min(300px, calc(100vw - 44px));
+  padding: 20px;
+  border-radius: 22px 255px 26px 225px / 225px 24px 255px 28px;
+  transform: rotate(0.45deg);
+}
+
+.tour-info-panel::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 76px;
+  height: 22px;
+  background: rgba(229, 224, 216, 0.82);
+  transform: translateX(-50%) rotate(-3deg);
+}
+
+.tour-info-panel dt,
+.tour-info-panel dd,
+.tour-info-panel__subhead,
+.tour-info-panel__actions button,
+.tour-info-panel__view-actions button {
+  font-family: var(--font-sketch);
+}
+
+.tour-info-panel dt {
+  font-size: 13px;
+  color: rgba(45, 45, 45, 0.7);
+}
+
+.tour-info-panel dd {
+  font-size: 14px;
+  color: var(--drive-ink);
+}
+
+.tour-info-panel__progress {
+  height: 10px;
+  border: 2px solid var(--drive-ink);
+  border-radius: 255px 18px 225px 14px / 14px 225px 18px 255px;
+  background: #fff;
+}
+
+.tour-info-panel__progress span {
+  border-radius: inherit;
+  background: var(--drive-red);
+}
+
+.tour-info-panel__actions button,
+.tour-info-panel__view-actions button,
+.tour-summary-card button,
+.arrival-card__actions button {
+  min-height: 42px;
+  border: 2px solid var(--drive-ink);
+  border-radius: 255px 16px 225px 14px / 14px 225px 16px 255px;
+  background: #fff;
+  box-shadow: 3px 3px 0 var(--drive-ink);
+  color: var(--drive-ink);
+  font-size: 13px;
+  transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease, color 100ms ease;
+}
+
+.tour-info-panel__actions button:hover:not(:disabled),
+.tour-info-panel__view-actions button:hover,
+.tour-summary-card button:hover,
+.arrival-card__actions button:hover {
+  transform: translate(2px, 2px) rotate(-1deg);
+  box-shadow: 1px 1px 0 var(--drive-ink);
+  background: var(--drive-red);
+  color: #fff;
+}
+
+.tour-info-panel__view-actions button.is-active {
+  border-color: var(--drive-ink);
+  background: var(--drive-blue);
+  color: #fff;
+}
+
+.route-timeline {
+  bottom: 20px;
+  padding: 14px 16px;
+  border-radius: 20px 255px 18px 225px / 225px 18px 255px 20px;
+  transform: translateX(-50%) rotate(-0.3deg);
+}
+
+.route-timeline__stop {
+  border: 2px dashed rgba(45, 45, 45, 0.5);
+  border-radius: 18px 255px 20px 225px / 225px 20px 255px 18px;
+  background: #fff;
+  font-family: var(--font-sketch);
+}
+
+.route-timeline__stop span {
+  border: 2px solid var(--drive-ink);
+  background: #fff9c4;
+  font-family: var(--font-sketch-title);
+}
+
+.route-timeline__stop strong {
+  font: 700 13px/1.2 var(--font-sketch);
+}
+
+.route-timeline__stop em {
+  font: 400 12px/1 var(--font-sketch);
+}
+
+.route-timeline__stop.is-reached {
+  border-style: solid;
+  border-color: var(--drive-blue);
+  background: #eef4ff;
+}
+
+.route-timeline__stop.is-current {
+  border-color: var(--drive-red);
+  background: #fff9c4;
+  animation: none;
+  transform: rotate(1deg);
+}
+
+.hud-hints {
+  bottom: 124px;
+}
+
+.hud-key {
+  padding: 5px 10px;
+  border: 0;
+  border-bottom: 2px dashed var(--drive-ink);
+  color: var(--drive-ink);
+  font: 400 13px/1 var(--font-sketch);
+}
+
+.hud-speed,
+.hud-road,
+.hud-time {
+  color: var(--drive-ink);
+  font-family: var(--font-sketch);
+}
+
+.hud-speed {
+  right: 26px;
+  bottom: 126px;
+  padding: 9px 12px;
+  border: 3px solid var(--drive-ink);
+  border-radius: 255px 18px 225px 14px / 14px 225px 18px 255px;
+  background: #fff9c4;
+  box-shadow: 4px 4px 0 var(--drive-ink);
+  transform: rotate(1deg);
+}
+
+.hud-speed.is-visible {
+  transform: rotate(1deg);
+}
+
+.hud-speed__val {
+  font: 700 28px/1 var(--font-sketch-title);
+}
+
+.hud-road {
+  right: 124px;
+  bottom: 126px;
+  padding-left: 14px;
+  border-left: 4px solid var(--drive-blue);
+}
+
+.hud-road span,
+.hud-road strong,
+.hud-road p,
+.hud-time span,
+.hud-time strong {
+  font-family: var(--font-sketch);
+}
+
+.btn-map-view,
+.interact-prompt {
+  border: 2px dashed var(--drive-ink);
+  border-radius: 255px 18px 225px 14px / 14px 225px 18px 255px;
+  background: var(--drive-paper);
+  color: var(--drive-ink);
+  font: 700 14px/1 var(--font-sketch);
+}
+
+@media (max-width: 980px) {
+  .route-timeline {
+    transform: rotate(-0.3deg);
+  }
+}
+
+@media (max-width: 780px) {
+  .tour-info-panel {
+    bottom: 150px;
+  }
+
+  .hud-hints,
+  .hud-road {
+    display: none;
+  }
+
+  .hud-speed {
+    bottom: 112px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drive-overlay,
+  .intro-screen,
+  .route-timeline__stop,
+  .guided-tour-status {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

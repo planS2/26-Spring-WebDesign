@@ -1,5 +1,5 @@
 import { Clone, Html, useGLTF } from '@react-three/drei';
-import { useMemo } from 'react';
+import { Component, useMemo } from 'react';
 import * as THREE from 'three';
 import { landmarks } from '../../data/landmarks.js';
 import { worldPosToHeight } from '../../data/terrain.js';
@@ -17,7 +17,7 @@ function LoadedLandmarkModel({ landmark }) {
     box.getSize(size);
     box.getCenter(center);
     const maxDimension = Math.max(size.x, size.y, size.z) || 1;
-    const targetSize = landmark.scale;
+    const targetSize = THREE.MathUtils.clamp(landmark.scale * 0.18, 0.85, 1.3);
     const fitScale = targetSize / maxDimension;
 
     clone.scale.setScalar(fitScale);
@@ -28,7 +28,7 @@ function LoadedLandmarkModel({ landmark }) {
   return <Clone object={fittedScene} castShadow receiveShadow />;
 }
 
-function PlaceholderLandmarkModel({ landmark }) {
+function MonumentLandmarkMarker({ landmark, highlighted }) {
   const color = {
     dome: '#c47b58',
     bridge: '#d7c2a2',
@@ -45,99 +45,44 @@ function PlaceholderLandmarkModel({ landmark }) {
     mountain: '#9a8f7c',
     village: '#d8c8a6',
   }[landmark.modelKind] ?? '#c7a070';
+  const markerScale = highlighted ? 1.12 : 1;
 
   return (
-    <group>
-      <mesh castShadow receiveShadow position={[0, 0.35, 0]}>
-        <boxGeometry args={[landmark.scale * 0.86, 0.7, landmark.scale * 0.54]} />
-        <meshStandardMaterial color={color} roughness={0.72} metalness={0.03} />
+    <group scale={markerScale}>
+      <mesh castShadow receiveShadow position={[0, 0.055, 0]}>
+        <cylinderGeometry args={[0.24, 0.3, 0.11, 8]} />
+        <meshStandardMaterial color="#d7c9aa" roughness={0.78} />
       </mesh>
-      {landmark.modelKind === 'dome' && (
-        <mesh castShadow position={[0, 1.16, 0]}>
-          <sphereGeometry args={[landmark.scale * 0.32, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
-          <meshStandardMaterial color="#b95f46" roughness={0.68} />
-        </mesh>
-      )}
-      {landmark.modelKind === 'bridge' && (
-        <mesh castShadow position={[0, 0.95, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <torusGeometry args={[landmark.scale * 0.32, 0.18, 8, 18, Math.PI]} />
-          <meshStandardMaterial color={color} roughness={0.66} />
-        </mesh>
-      )}
-      {landmark.modelKind === 'arena' && (
-        <>
-          <mesh castShadow position={[0, 0.9, 0]}>
-            <torusGeometry args={[landmark.scale * 0.38, 0.22, 12, 48]} />
-            <meshStandardMaterial color={color} roughness={0.78} />
-          </mesh>
-          <mesh position={[0, 0.92, 0]}>
-            <torusGeometry args={[landmark.scale * 0.25, 0.05, 8, 48]} />
-            <meshStandardMaterial color="#eadbbf" roughness={0.72} />
-          </mesh>
-        </>
-      )}
-      {landmark.modelKind === 'cathedral' && [ -1.8, 0, 1.8 ].map((x) => (
-        <mesh key={x} castShadow position={[x, 1.3, 0]}>
-          <coneGeometry args={[0.42, 1.9, 5]} />
-          <meshStandardMaterial color="#eee4ce" roughness={0.62} />
-        </mesh>
-      ))}
-      {landmark.modelKind === 'tower' && (
-        <>
-          <mesh castShadow position={[0, 2.15, 0]}>
-            <cylinderGeometry args={[landmark.scale * 0.18, landmark.scale * 0.24, landmark.scale * 0.72, 12]} />
-            <meshStandardMaterial color={color} roughness={0.64} />
-          </mesh>
-          <mesh castShadow position={[0, 4.55, 0]}>
-            <coneGeometry args={[landmark.scale * 0.16, landmark.scale * 0.34, 12]} />
-            <meshStandardMaterial color="#b98257" roughness={0.58} />
-          </mesh>
-        </>
-      )}
-      {landmark.modelKind === 'fountain' && (
-        <>
-          <mesh castShadow position={[0, 0.86, 0]}>
-            <cylinderGeometry args={[landmark.scale * 0.38, landmark.scale * 0.42, 0.32, 32]} />
-            <meshStandardMaterial color="#c8d6d7" roughness={0.42} />
-          </mesh>
-          <mesh position={[0, 1.12, 0]}>
-            <cylinderGeometry args={[landmark.scale * 0.3, landmark.scale * 0.3, 0.08, 32]} />
-            <meshStandardMaterial color="#72b9d3" emissive="#3f9fc0" emissiveIntensity={0.18} transparent opacity={0.72} />
-          </mesh>
-        </>
-      )}
-      {['palace', 'castle'].includes(landmark.modelKind) && [ -2.4, 2.4 ].map((x) => (
-        <mesh key={x} castShadow position={[x, 1.45, 0]}>
-          <cylinderGeometry args={[0.46, 0.54, 2.2, 10]} />
-          <meshStandardMaterial color={color} roughness={0.7} />
-        </mesh>
-      ))}
-      {landmark.modelKind === 'temple' && [ -2.2, -1.1, 0, 1.1, 2.2 ].map((x) => (
-        <mesh key={x} castShadow position={[x, 1.12, -0.15]}>
-          <cylinderGeometry args={[0.16, 0.18, 1.9, 10]} />
-          <meshStandardMaterial color="#e5d2a7" roughness={0.78} />
-        </mesh>
-      ))}
-      {landmark.modelKind === 'village' && [ -1.8, -0.55, 0.8, 2.0 ].map((x, index) => (
-        <mesh key={x} castShadow position={[x, 1.15, (index % 2) * 0.7 - 0.25]}>
-          <coneGeometry args={[0.5, 1.2, 12]} />
-          <meshStandardMaterial color="#d8c8a6" roughness={0.72} />
-        </mesh>
-      ))}
-      {['coast', 'lake', 'mountain'].includes(landmark.modelKind) && (
-        <mesh castShadow position={[0, 1.35, 0]}>
-          <coneGeometry args={[landmark.scale * 0.42, landmark.scale * 0.48, 6]} />
-          <meshStandardMaterial color={color} roughness={0.84} />
-        </mesh>
-      )}
-      {landmark.modelKind === 'ruins' && [ -2.1, -0.7, 0.8, 2.2 ].map((x, index) => (
-        <mesh key={x} castShadow position={[x, 1 + (index % 2) * 0.22, -0.1]}>
-          <cylinderGeometry args={[0.18, 0.22, 1.8 + (index % 2) * 0.35, 8]} />
-          <meshStandardMaterial color="#d1b58d" roughness={0.8} />
-        </mesh>
-      ))}
+      <mesh castShadow position={[0, 0.34, 0]}>
+        <cylinderGeometry args={[0.085, 0.11, 0.56, 10]} />
+        <meshStandardMaterial color={color} roughness={0.68} />
+      </mesh>
+      <mesh castShadow position={[0, 0.66, 0]} rotation={[0, Math.PI / 4, 0]}>
+        {['bridge', 'arena', 'fountain', 'lake'].includes(landmark.modelKind)
+          ? <torusGeometry args={[0.13, 0.035, 8, 18]} />
+          : ['tower', 'cathedral', 'dome', 'temple'].includes(landmark.modelKind)
+            ? <coneGeometry args={[0.14, 0.24, 6]} />
+            : <octahedronGeometry args={[0.15, 0]} />}
+        <meshStandardMaterial color={highlighted ? '#f0d490' : color} emissive={highlighted ? '#c89545' : '#000000'} emissiveIntensity={highlighted ? 0.28 : 0} roughness={0.56} />
+      </mesh>
     </group>
   );
+}
+
+class LandmarkModelBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { failed: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) return this.props.fallback;
+    return this.props.children;
+  }
 }
 
 function LandmarkModel({ landmark }) {
@@ -168,14 +113,18 @@ function LandmarkModel({ landmark }) {
         <ringGeometry args={[landmark.triggerRadius * 0.28, landmark.triggerRadius * 0.42, 64]} />
         <meshBasicMaterial color={isActiveStop ? '#f0d490' : '#7ed0e4'} transparent opacity={isActiveStop ? 0.44 : 0.22} depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[0, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[landmark.triggerRadius * 0.24, 48]} />
-        <meshBasicMaterial color="#f0d490" transparent opacity={0.08} depthWrite={false} />
+      <mesh position={[0, 0.016, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.3, 0.38, 40]} />
+        <meshBasicMaterial color={isActiveStop ? '#f0d490' : '#7ed0e4'} transparent opacity={isActiveStop ? 0.44 : 0.22} depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
       </mesh>
-      {landmark.modelPath ? <LoadedLandmarkModel landmark={landmark} /> : <PlaceholderLandmarkModel landmark={landmark} />}
-      <pointLight position={[0, 4.8, 0]} color="#f0d490" distance={18} intensity={0.42} />
-      <mesh position={[0, 2.8, 0]} visible={false} onClick={() => selectLandmark(landmark.id)}>
-        <cylinderGeometry args={[landmark.triggerRadius * 0.45, landmark.triggerRadius * 0.45, 6, 20]} />
+      {landmark.modelPath ? (
+        <LandmarkModelBoundary fallback={<MonumentLandmarkMarker landmark={landmark} highlighted={isHighlighted} />}>
+          <LoadedLandmarkModel landmark={landmark} />
+        </LandmarkModelBoundary>
+      ) : <MonumentLandmarkMarker landmark={landmark} highlighted={isHighlighted} />}
+      <pointLight position={[0, 0.75, 0]} color="#f0d490" distance={3.2} intensity={isHighlighted ? 0.32 : 0.08} />
+      <mesh position={[0, 0.4, 0]} visible={false} onClick={() => selectLandmark(landmark.id)}>
+        <cylinderGeometry args={[0.45, 0.45, 0.9, 16]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
       {isHighlighted && (

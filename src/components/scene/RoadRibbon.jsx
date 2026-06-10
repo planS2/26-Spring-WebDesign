@@ -55,6 +55,7 @@ export function RoadRibbon() {
       geometry.computeVertexNormals();
       return geometry;
     };
+  }, [activeRoute.signature, cameraMode, localProgress, terrain.status, terrain.version]);
 
     const dashGeometries = [];
     const dashEvery = activeRoute.source === 'osrm' ? 18 : 12;
@@ -103,6 +104,9 @@ export function RoadRibbon() {
       });
     }
 
+  const overview = useMemo(() => {
+    if (cameraMode !== 'map') return null;
+    const routeStopIds = activeRoute.routeIds.length ? activeRoute.routeIds : FALLBACK_ROUTE_IDS;
     return {
       baseRoadGeometry: buildStrip(ROAD_WIDTH, 0.025),
       passedRoadGeometry: buildStrip(PASSED_WIDTH, 0.04, 0, progressIndex),
@@ -114,8 +118,27 @@ export function RoadRibbon() {
     };
   }, [activeRoute, nearbyLandmarkId, routeProgress, terrain.version]);
 
-  if (terrain.status !== 'ready') return null;
+  if (cameraMode === 'map' && overview) {
+    return (
+      <group>
+        <mesh geometry={overviewGeometry} renderOrder={2}>
+          <meshBasicMaterial color="#314f5c" />
+        </mesh>
+        {overview.stops.map((stop) => (
+          <mesh key={stop.id} position={stop.position} rotation={[-Math.PI / 2, 0, 0]}>
+            <circleGeometry args={[stop.active ? 0.9 : 0.62, 16]} />
+            <meshBasicMaterial color={stop.active ? '#f0d490' : '#ffffff'} />
+          </mesh>
+        ))}
+        <mesh position={[overview.vehicle.x, 0.16, overview.vehicle.z]}>
+          <sphereGeometry args={[0.42, 12, 8]} />
+          <meshBasicMaterial color="#56d6e6" />
+        </mesh>
+      </group>
+    );
+  }
 
+  if (!localRoad) return null;
   return (
     <group>
       <mesh geometry={edgeGeometries[0]} receiveShadow>

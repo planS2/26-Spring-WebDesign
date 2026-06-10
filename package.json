@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173",
     "dev:backend": "conda run -n web3d-backend python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000",
+    "dev:backend:postgres": "powershell -ExecutionPolicy Bypass -File tools/start-backend.ps1",
     "fetch:live-data": "node tools/fetch-live-landmark-data.mjs",
+    "import:live-data:postgres": "powershell -ExecutionPolicy Bypass -File tools/import-live-data.ps1",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -15,12 +17,13 @@
     "@react-three/fiber": "^8.17.14",
     "@react-three/rapier": "^1.5.0",
     "@tanstack/react-query": "^5.90.5",
+    "3d-tiles-renderer": "^0.4.17",
+    "cesium": "^1.142.0",
     "gsap": "^3.14.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "three": "^0.183.2",
     "three-stdlib": "^2.36.0",
-    "3d-tiles-renderer": "^0.4.17",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -31,6 +34,7 @@
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.12",
-    "vite": "^8.0.1"
+    "vite": "^8.0.1",
+    "vite-plugin-static-copy": "^4.1.1"
   }
 }

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=Manrope:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=Kalam:wght@400;700&family=Manrope:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600&family=Patrick+Hand&display=swap');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -25,6 +25,13 @@
   --font-display-zh: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', serif;
   --font-ui:      'Manrope', 'Helvetica Neue', sans-serif;
   --font-ui-zh:   'Noto Sans SC', 'Source Han Sans SC', 'Microsoft YaHei UI', 'PingFang SC', sans-serif;
+  --font-sketch: 'Patrick Hand', 'Noto Sans SC', cursive;
+  --font-sketch-title: 'Kalam', 'Noto Sans SC', cursive;
+  --sketch-paper: #fdfbf7;
+  --sketch-ink: #2d2d2d;
+  --sketch-muted: #e5e0d8;
+  --sketch-red: #ff4d4d;
+  --sketch-blue: #2d5da1;
 }
 
 html, body {

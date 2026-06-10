@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { MAP_BOUNDS, worldToLngLat } from './landmarks.js';
-import { getRouteSegmentAtProgress, roadCurve } from './routes.js';
+import { MAP_BOUNDS } from './landmarks.js';
 
-const HEIGHT_SCALE = 0.0011;
-const DEM_SIZE = 640;
+const HEIGHT_SCALE = 0.0022;
+const DEM_SIZE = 512;
+const TERRAIN_SEGMENTS = 120;
 const listeners = new Set();
 let terrainState = {
   status: 'idle',
@@ -15,8 +15,8 @@ let heightMap = null;
 let hmWidth = 0;
 let hmHeight = 0;
 let loadPromise = null;
-let activeRouteCorridorPoints = null;
 let activeRouteCorridorKey = '';
+let terrainLoadAttempt = 0;
 
 function emit() {
   for (const listener of listeners) listener(terrainState);
@@ -41,7 +41,7 @@ function lonLatToTileFloat(lon, lat, zoom) {
 }
 
 function demTileUrl(z, x, y) {
-  return `https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${z}/${x}/${y}.png`;
+  return `/terrain-dem/${z}/${x}/${y}.png`;
 }
 
 function sampleHeight(u, v) {
@@ -99,17 +99,37 @@ function pointInPolygon(lon, lat, polygon) {
   return inside;
 }
 
-const italyMainlandMask = [
-  [6.6, 47.1], [13.2, 47.1], [13.55, 46.3], [12.7, 45.55], [13.25, 44.4],
-  [13.05, 43.4], [12.6, 42.4], [13.35, 41.35], [14.75, 40.7], [15.75, 39.45],
-  [16.35, 38.35], [15.72, 37.85], [14.78, 38.9], [14.25, 40.58], [12.85, 41.28],
-  [11.1, 42.25], [10.4, 43.35], [9.72, 43.72], [8.95, 44.08], [7.55, 44.18],
-  [6.78, 45.05],
+const italyLandMasks = [
+  [
+    [6.62, 45.09], [7.05, 44.72], [7.48, 44.14], [8.16, 43.92], [8.95, 44.02],
+    [9.72, 43.73], [10.31, 43.48], [10.72, 42.97], [11.1, 42.42], [11.58, 42.1],
+    [12.13, 41.88], [12.72, 41.31], [13.41, 41.13], [14.1, 40.83], [14.73, 40.6],
+    [15.14, 40.03], [15.64, 39.73], [16.08, 39.06], [16.56, 38.72], [16.91, 38.88],
+    [17.18, 38.99], [16.57, 39.38], [16.51, 39.72], [16.95, 40.23], [17.78, 40.32],
+    [18.48, 40.07], [18.51, 40.52], [17.93, 40.82], [17.29, 40.98], [16.72, 41.31],
+    [16.08, 41.9], [15.42, 41.94], [14.91, 42.28], [14.2, 42.61], [13.77, 43.12],
+    [13.53, 43.6], [13.67, 44.08], [13.3, 44.55], [12.86, 45.05], [13.07, 45.62],
+    [12.57, 45.81], [12.1, 45.69], [11.45, 45.92], [10.78, 46.49], [10.1, 46.62],
+    [9.42, 46.47], [8.74, 46.14], [8.11, 46.25], [7.52, 45.96], [7.05, 45.55],
+  ],
+  [
+    [12.36, 38.2], [12.64, 37.72], [13.18, 37.5], [13.66, 37.34], [14.08, 37.08],
+    [14.59, 36.72], [15.1, 36.7], [15.36, 37.1], [15.29, 37.48], [15.08, 37.82],
+    [14.6, 38.02], [14.1, 38.1], [13.57, 38.18], [13.05, 38.18], [12.65, 38.14],
+  ],
+  [
+    [8.13, 41.26], [8.2, 40.77], [8.37, 40.31], [8.47, 39.81], [8.39, 39.3],
+    [8.55, 38.88], [8.85, 38.86], [9.17, 39.16], [9.55, 39.12], [9.7, 39.58],
+    [9.63, 40.08], [9.76, 40.55], [9.55, 40.91], [9.17, 41.22], [8.64, 41.29],
+  ],
+  [
+    [12.23, 45.56], [12.35, 45.47], [12.42, 45.34], [12.29, 45.22],
+    [12.12, 45.31], [12.08, 45.45],
+  ],
 ];
 
 function isLikelyLand(lon, lat) {
-  if (pointInPolygon(lon, lat, italyMainlandMask)) return true;
-  if (lon >= 12.12 && lon <= 12.34 && lat >= 45.41 && lat <= 45.55) return true;
+  if (italyLandMasks.some((polygon) => pointInPolygon(lon, lat, polygon))) return true;
   if (lon >= 14.12 && lon <= 14.56 && lat >= 40.68 && lat <= 41.12) return true;
   return false;
 }
@@ -163,6 +183,14 @@ function smoothHeightMap(source, width, height, passes = 2) {
 function loadDemTile(z, tx, ty) {
   return new Promise((resolve) => {
     const img = new Image();
+    let settled = false;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutHandle);
+      resolve(result);
+    };
+    const timeoutHandle = window.setTimeout(() => finish(null), 4500);
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       const canvas = document.createElement('canvas');
@@ -178,9 +206,9 @@ function loadDemTile(z, tx, ty) {
         const b = data[i * 4 + 2];
         out[i] = (r * 256 + g + b / 256) - 32768;
       }
-      resolve({ data: out, width: img.width, height: img.height, tx, ty });
+      finish({ data: out, width: img.width, height: img.height, tx, ty });
     };
-    img.onerror = () => resolve(null);
+    img.onerror = () => finish(null);
     img.src = demTileUrl(z, tx, ty);
   });
 }
@@ -236,64 +264,28 @@ function buildStylizedTexture(heightData, width, height) {
   return texture;
 }
 
+function sampleTerrainGridVertex(col, row) {
+  const u = THREE.MathUtils.clamp(col / TERRAIN_SEGMENTS, 0, 1);
+  const v = THREE.MathUtils.clamp(row / TERRAIN_SEGMENTS, 0, 1);
+  return isLikelyLand(lonAtU(u), latAtV(v)) ? sampleHeight(u, v) : 0;
+}
+
 function buildGeometry() {
-  const segments = 120;
-  const geometry = new THREE.PlaneGeometry(MAP_BOUNDS.worldSize, MAP_BOUNDS.worldSize, segments, segments);
+  const segments = TERRAIN_SEGMENTS;
+  const geometry = new THREE.PlaneGeometry(MAP_BOUNDS.worldWidth, MAP_BOUNDS.worldSize, segments, segments);
   geometry.rotateX(-Math.PI / 2);
   const positions = geometry.attributes.position;
   const width = segments + 1;
-  const routeCorridor = buildRouteCorridorProfile();
   for (let i = 0; i < positions.count; i += 1) {
     const col = i % width;
     const row = Math.floor(i / width);
     const u = col / segments;
     const v = row / segments;
-    const x = (u - 0.5) * MAP_BOUNDS.worldSize;
-    const z = (v - 0.5) * MAP_BOUNDS.worldSize;
-    positions.setY(i, applyRouteCorridorCut(x, z, sampleHeight(u, v), routeCorridor));
+    positions.setY(i, sampleTerrainGridVertex(col, row));
   }
   positions.needsUpdate = true;
   geometry.computeVertexNormals();
   return geometry;
-}
-
-function buildRouteCorridorProfile() {
-  const samples = activeRouteCorridorPoints?.length >= 2 ? activeRouteCorridorPoints : roadCurve.getPoints(220);
-  const heights = activeRouteCorridorPoints?.length >= 2
-    ? buildRouteHeightProfile(samples, { clearance: 0.18, maxGrade: 0.025, smoothPasses: 2 })
-    : buildSemanticRouteHeightProfile(samples, getRouteSegmentAtProgress, { clearance: 0.12 });
-  return samples.map((point, index) => ({
-    x: point.x,
-    z: point.z,
-    height: heights[index],
-    segment: activeRouteCorridorPoints?.length >= 2 ? { type: 'realRoad' } : getRouteSegmentAtProgress(index / Math.max(samples.length - 1, 1)),
-  }));
-}
-
-function applyRouteCorridorCut(worldX, worldZ, terrainHeight, corridor) {
-  let nearest = null;
-  let nearestDistance = Number.POSITIVE_INFINITY;
-
-  for (const sample of corridor) {
-    const distance = Math.hypot(worldX - sample.x, worldZ - sample.z);
-    if (distance < nearestDistance) {
-      nearest = sample;
-      nearestDistance = distance;
-    }
-  }
-
-  if (!nearest) return terrainHeight;
-
-  const isTunnel = nearest.segment?.type === 'tunnel';
-  const innerWidth = isTunnel ? 1.45 : 2.25;
-  const outerWidth = isTunnel ? 3.2 : 5.2;
-  if (nearestDistance >= outerWidth) return terrainHeight;
-
-  const cutTarget = nearest.height - (isTunnel ? 0.2 : 0.16);
-  if (terrainHeight <= cutTarget) return terrainHeight;
-
-  const edgeBlend = 1 - THREE.MathUtils.smoothstep(nearestDistance, innerWidth, outerWidth);
-  return THREE.MathUtils.lerp(terrainHeight, cutTarget, edgeBlend);
 }
 
 export function loadTerrainData() {
@@ -304,6 +296,7 @@ export function loadTerrainData() {
   emit();
 
   loadPromise = (async () => {
+    terrainLoadAttempt += 1;
     const zoom = 6;
     const tileMin = lonLatToTile(MAP_BOUNDS.lonMin, MAP_BOUNDS.latMax, zoom);
     const tileMax = lonLatToTile(MAP_BOUNDS.lonMax, MAP_BOUNDS.latMin, zoom);
@@ -318,12 +311,13 @@ export function loadTerrainData() {
         return loadDemTile(zoom, tx, ty);
       }),
     );
+    const loadedResults = results.filter(Boolean);
 
     const rawWidth = tcX * tilePx;
     const rawHeight = tcY * tilePx;
     const raw = new Float32Array(rawWidth * rawHeight);
 
-    for (const result of results) {
+    for (const result of loadedResults) {
       if (!result) continue;
       const offX = (result.tx - tileMin.x) * tilePx;
       const offY = (result.ty - tileMin.y) * tilePx;
@@ -334,20 +328,38 @@ export function loadTerrainData() {
       }
     }
 
-    const croppedRaw = resampleRawToBounds(raw, rawWidth, rawHeight, tileMin, zoom);
     hmWidth = DEM_SIZE;
     hmHeight = DEM_SIZE;
-    heightMap = new Float32Array(croppedRaw.length);
-    for (let i = 0; i < croppedRaw.length; i += 1) {
-      heightMap[i] = Math.max(0, croppedRaw[i]) * HEIGHT_SCALE;
+    const hasUsableDemCoverage = loadedResults.length >= Math.ceil(results.length * 0.8);
+    if (hasUsableDemCoverage) {
+      const croppedRaw = resampleRawToBounds(raw, rawWidth, rawHeight, tileMin, zoom);
+      heightMap = new Float32Array(croppedRaw.length);
+      for (let i = 0; i < croppedRaw.length; i += 1) {
+        heightMap[i] = Math.max(0, croppedRaw[i]) * HEIGHT_SCALE;
+      }
+      heightMap = smoothHeightMap(heightMap, hmWidth, hmHeight, 1);
+    } else {
+      heightMap = null;
+      terrainState = {
+        ...terrainState,
+        status: 'error',
+        source: 'unavailable',
+        loadedTileCount: loadedResults.length,
+        loadAttempt: terrainLoadAttempt,
+      };
+      loadPromise = null;
+      emit();
+      return terrainState;
     }
-    heightMap = smoothHeightMap(heightMap, hmWidth, hmHeight, 3);
 
     terrainState = {
       status: 'ready',
       geometry: buildGeometry(),
       texture: buildStylizedTexture(heightMap, hmWidth, hmHeight),
       version: terrainState.version + 1,
+      source: 'dem',
+      loadedTileCount: loadedResults.length,
+      loadAttempt: terrainLoadAttempt,
     };
     loadPromise = null;
     emit();
@@ -368,27 +380,67 @@ export function getTerrainState() {
 
 export function setTerrainRouteCorridor(points) {
   const nextKey = points?.length >= 2
-    ? `${points.length}:${points[0].x.toFixed(2)},${points[0].z.toFixed(2)}:${points[points.length - 1].x.toFixed(2)},${points[points.length - 1].z.toFixed(2)}`
+    ? `${points.length}:${[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+      const point = points[Math.min(points.length - 1, Math.round((points.length - 1) * ratio))];
+      return `${point.x.toFixed(2)},${point.z.toFixed(2)}`;
+    }).join(':')}`
     : '';
   if (nextKey === activeRouteCorridorKey) return;
 
   activeRouteCorridorKey = nextKey;
-  activeRouteCorridorPoints = points?.length >= 2 ? points : null;
-  if (terrainState.status !== 'ready') return;
-  terrainState = {
-    ...terrainState,
-    geometry: buildGeometry(),
-    version: terrainState.version + 1,
-  };
-  emit();
 }
 
 export function worldPosToHeight(worldX, worldZ) {
-  const u = THREE.MathUtils.clamp(worldX / MAP_BOUNDS.worldSize + 0.5, 0, 1);
+  const u = THREE.MathUtils.clamp(worldX / MAP_BOUNDS.worldWidth + 0.5, 0, 1);
   const v = THREE.MathUtils.clamp(worldZ / MAP_BOUNDS.worldSize + 0.5, 0, 1);
-  const { lon, lat } = worldToLngLat(worldX, worldZ);
-  const baseHeight = sampleHeight(u, v);
-  return isLikelyLand(lon, lat) ? baseHeight : Math.min(baseHeight, 0.02);
+  if (!isLikelyLand(lonAtU(u), latAtV(v))) return 0;
+  return sampleHeight(u, v);
+}
+
+export function worldPosToRenderedHeight(worldX, worldZ) {
+  const u = THREE.MathUtils.clamp(worldX / MAP_BOUNDS.worldWidth + 0.5, 0, 1);
+  const v = THREE.MathUtils.clamp(worldZ / MAP_BOUNDS.worldSize + 0.5, 0, 1);
+  const gridX = u * TERRAIN_SEGMENTS;
+  const gridZ = v * TERRAIN_SEGMENTS;
+  const x0 = Math.floor(gridX);
+  const x1 = Math.min(x0 + 1, TERRAIN_SEGMENTS);
+  const z0 = Math.floor(gridZ);
+  const z1 = Math.min(z0 + 1, TERRAIN_SEGMENTS);
+  const fx = gridX - x0;
+  const fz = gridZ - z0;
+  const h00 = sampleTerrainGridVertex(x0, z0);
+  const h10 = sampleTerrainGridVertex(x1, z0);
+  const h01 = sampleTerrainGridVertex(x0, z1);
+  const h11 = sampleTerrainGridVertex(x1, z1);
+
+  // PlaneGeometry uses triangles (top-left, bottom-left, top-right) and
+  // (bottom-left, bottom-right, top-right). Match those faces exactly.
+  if (fx + fz <= 1) {
+    return h00 + (h10 - h00) * fx + (h01 - h00) * fz;
+  }
+  return h11 + (h01 - h11) * (1 - fx) + (h10 - h11) * (1 - fz);
+}
+
+export function sampleRoadSurface(worldX, worldZ, tangentX, tangentZ, halfWidth, clearance) {
+  const tangentLength = Math.hypot(tangentX, tangentZ) || 1;
+  const tx = tangentX / tangentLength;
+  const tz = tangentZ / tangentLength;
+  const nx = -tz;
+  const nz = tx;
+  const leftX = worldX - nx * halfWidth;
+  const leftZ = worldZ - nz * halfWidth;
+  const rightX = worldX + nx * halfWidth;
+  const rightZ = worldZ + nz * halfWidth;
+  const centerHeight = worldPosToHeight(worldX, worldZ) + clearance;
+  const leftHeight = worldPosToHeight(leftX, leftZ) + clearance;
+  const rightHeight = worldPosToHeight(rightX, rightZ) + clearance;
+
+  return {
+    centerHeight,
+    left: new THREE.Vector3(leftX, leftHeight, leftZ),
+    right: new THREE.Vector3(rightX, rightHeight, rightZ),
+    roll: Math.atan2(rightHeight - leftHeight, Math.max(halfWidth * 2, Number.EPSILON)),
+  };
 }
 
 export function worldPosToRouteHeight(worldX, worldZ, footprint = 4.5) {
@@ -439,8 +491,13 @@ export function buildRouteHeightProfile(points, {
   clearance = 0.28,
   maxGrade = 0.018,
   smoothPasses = 3,
+  followTerrain = false,
 } = {}) {
   if (points.length === 0) return [];
+
+  if (followTerrain) {
+    return points.map((point) => worldPosToRouteHeight(point.x, point.z, footprint) + clearance);
+  }
 
   const safeHeights = points.map((point) => worldPosToRouteSafeHeight(point.x, point.z, footprint) + clearance);
   let profile = smoothHeightSamples(safeHeights, 10, smoothPasses)
