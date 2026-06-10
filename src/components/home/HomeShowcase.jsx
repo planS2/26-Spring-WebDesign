@@ -2,13 +2,9 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { landmarks as baseLandmarks, lngLatToWorld } from '../../data/landmarks.js';
+import { landmarks } from '../../data/landmarks.js';
 import { useAppStore } from '../../state/useAppStore.js';
-<<<<<<< HEAD
-import liveLandmarksData from '../../../data/live-landmarks.json';
-=======
 import liveLandmarksData from '../../data/live-landmarks.json';
->>>>>>> 20e546486fdbe43b4c5e34e8596d6fc3d3eb9eb1
 
 const versions = [
   {
