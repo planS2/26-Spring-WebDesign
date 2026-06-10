@@ -3,6 +3,7 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { landmarks } from '../../data/landmarks.js';
+import { useAppStore } from '../../state/useAppStore.js';
 import liveLandmarksData from '../../../public/data/live-landmarks.json';
 
 const versions = [
@@ -42,6 +43,36 @@ const storyModelPaths = {
 
 const liveIndex = new Map((liveLandmarksData.items ?? []).map((item) => [item.id, item]));
 const initialRouteIds = ['milan_duomo', 'venice_rialto', 'florence_duomo', 'pisa', 'colosseum', 'pompeii'];
+
+const routePresets = [
+  {
+    id: 'classic_heritage',
+    name: '意大利经典建筑线',
+    ids: ['milan_duomo', 'venice_rialto', 'florence_duomo', 'pisa', 'colosseum', 'pompeii'],
+    hours: '约 11 小时',
+    distance: '约 920 km',
+    tags: ['经典路线', '建筑', '历史'],
+    intro: '从米兰主教座堂出发，串联威尼斯、佛罗伦萨、比萨、罗马与庞贝，适合作为完整课堂演示路线。',
+  },
+  {
+    id: 'north_water_city',
+    name: '北部水城与文艺复兴',
+    ids: ['milan_duomo', 'venice_rialto', 'florence_duomo', 'pisa'],
+    hours: '约 6 小时',
+    distance: '约 510 km',
+    tags: ['水城', '文艺复兴', '轻量路线'],
+    intro: '聚焦北部城市与托斯卡纳景观，站点更少，适合快速预览路线选择、到站卡片和视角切换。',
+  },
+  {
+    id: 'rome_ancient',
+    name: '古罗马遗产短线',
+    ids: ['colosseum', 'pompeii'],
+    hours: '约 3 小时',
+    distance: '约 240 km',
+    tags: ['历史', '古迹', '短线'],
+    intro: '以罗马斗兽场和庞贝为核心，适合在较短时间内展示导览完成总结和重新导览流程。',
+  },
+];
 const STORY_PARTICLE_COUNT = 7600;
 const STORY_MODEL_SAMPLE_COUNT = 8200;
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
@@ -1445,6 +1476,40 @@ function DestinationCards({ language, stops, favorites, compare, selectedId, vis
   );
 }
 
+
+function RoutePresetCards({ routeIds, onPreviewRoute, onStartRoute }) {
+  return (
+    <section className="home-module home-module--route-cards">
+      <div className="home-module__head"><span>推荐路线</span><strong>{routePresets.length}</strong></div>
+      <div className="route-card-grid">
+        {routePresets.map((route) => {
+          const isActive = route.ids.join('|') === routeIds.join('|');
+          return (
+            <article key={route.id} className={`route-card ${isActive ? 'is-active' : ''}`}>
+              <div className="route-card__top">
+                <h3>{route.name}</h3>
+                <span>{route.ids.length} 个景点</span>
+              </div>
+              <p>{route.intro}</p>
+              <div className="route-card__meta">
+                <strong>{route.hours}</strong>
+                <strong>{route.distance}</strong>
+              </div>
+              <div className="route-card__tags">
+                {route.tags.map((tag) => <span key={tag}>{tag}</span>)}
+              </div>
+              <div className="route-card__actions">
+                <button type="button" onClick={() => onPreviewRoute(route)}>预览路线</button>
+                <button type="button" onClick={() => onStartRoute(route)}>开始 3D 导览</button>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function RouteEditor({ language, routeStops, routeQuery, setRouteQuery, routeMatches, lockedIds, onAdd, onRemove, onMove, onToggleLock, onOptimize, onReset, onOpenDrive }) {
   const c = copy[language];
   return (
@@ -1713,6 +1778,7 @@ function PlannerPage(props) {
     <section className="concept-page concept-page--planner">
       <RouteEditor {...props} />
       <div className="concept-page__stack">
+        <RoutePresetCards routeIds={props.routeIds} onPreviewRoute={props.onPreviewRoute} onStartRoute={props.onStartRoute} />
         <MapBoard language={language} routeStops={routeStops} onOpenDrive={onOpenDrive} />
         <MetricsPanel language={language} routeStops={routeStops} days={days} pace={pace} />
         <RouteSchemaPanel language={language} routeStops={routeStops} routeSegments={routeSegments} />
@@ -1792,6 +1858,7 @@ export function HomeShowcase({ onOpenDrive }) {
   const [accountHistory, setAccountHistory] = useState([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [visibleCount, setVisibleCount] = useState(12);
+  const setActiveRouteIds = useAppStore((state) => state.setActiveRouteIds);
 
   const options = useMemo(() => ({
     regions: [...new Set(landmarks.map(regionFor))].sort(),
@@ -1890,6 +1957,23 @@ export function HomeShowcase({ onOpenDrive }) {
   const resetRoute = () => {
     setRouteIds(initialRouteIds);
     setLockedIds(new Set());
+    setActiveRouteIds(initialRouteIds);
+  };
+  const previewRoute = (route) => {
+    setRouteIds(route.ids);
+    setLockedIds(new Set());
+    setActiveRouteIds(route.ids);
+    setActivePage('planner');
+  };
+  const startRoute = (route) => {
+    setRouteIds(route.ids);
+    setLockedIds(new Set());
+    setActiveRouteIds(route.ids);
+    onOpenDrive(route.ids[0] ?? null);
+  };
+  const openDriveWithCurrentRoute = (landmarkId = null) => {
+    setActiveRouteIds(routeIds);
+    onOpenDrive(landmarkId);
   };
   const saveAuthPayload = (payload) => {
     window.localStorage.setItem(AUTH_TOKEN_KEY, payload.token);
@@ -1961,6 +2045,7 @@ export function HomeShowcase({ onOpenDrive }) {
     options,
     filteredStops,
     visibleCount,
+    routeIds,
     routeStops,
     routeSegments,
     routeQuery,
@@ -1992,10 +2077,12 @@ export function HomeShowcase({ onOpenDrive }) {
     onToggleLock: (id) => toggleSet(setLockedIds, id),
     onOptimize: optimizeRoute,
     onResetRoute: resetRoute,
+    onPreviewRoute: previewRoute,
+    onStartRoute: startRoute,
     onShowMore: () => setVisibleCount((count) => Math.min(count + 8, filteredStops.length)),
     onSignIn: () => setAuthDialogOpen(true),
     onSignOut: handleSignOut,
-    onOpenDrive,
+    onOpenDrive: openDriveWithCurrentRoute,
   };
 
   if (!hasEnteredHome) {
