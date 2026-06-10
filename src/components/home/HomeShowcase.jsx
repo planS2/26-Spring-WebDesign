@@ -1,8 +1,8 @@
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { landmarks } from '../../data/landmarks.js';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { landmarks as baseLandmarks, lngLatToWorld } from '../../data/landmarks.js';
 import { useAppStore } from '../../state/useAppStore.js';
 import liveLandmarksData from '../../data/live-landmarks.json';
 
@@ -43,10 +43,12 @@ const storyModelPaths = {
 
 const liveIndex = new Map((liveLandmarksData.items ?? []).map((item) => [item.id, item]));
 const baseLandmarkIndex = new Map(baseLandmarks.map((item) => [item.id, item]));
+
 const landmarks = (liveLandmarksData.items ?? []).map((item) => {
   const existing = baseLandmarkIndex.get(item.id);
   const lon = item.coordinates.lon;
   const lat = item.coordinates.lat;
+
   if (existing) {
     return {
       ...existing,
@@ -56,6 +58,7 @@ const landmarks = (liveLandmarksData.items ?? []).map((item) => {
       modelKind: item.category ?? existing.modelKind,
     };
   }
+
   return {
     id: item.id,
     name: item.name.en,
