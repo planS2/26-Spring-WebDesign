@@ -20,6 +20,8 @@ export const useAppStore = create((set, get) => ({
   arrivalNotice: null,
   arrivedLandmarkIds: [],
   tourResetToken: 0,
+  tourSpeedMultiplier: 8,
+  routeJumpRequest: null,
   autoDrive: false,
   sidebarOpen: true,
   focusPanelOpen: false,
@@ -56,6 +58,29 @@ export const useAppStore = create((set, get) => ({
     autoDrive,
     cameraMode: autoDrive && !state.focusPanelOpen && !state.modelViewerOpen ? 'follow' : state.cameraMode,
   })),
+  setTourSpeedMultiplier: (tourSpeedMultiplier) => set({
+    tourSpeedMultiplier: Math.min(Math.max(Number(tourSpeedMultiplier) || 1, 1), 30),
+  }),
+  jumpToRouteStop: (landmarkId) => set((state) => {
+    const fallbackIds = ['milan_duomo', 'venice_rialto', 'florence_duomo', 'pisa', 'colosseum', 'pompeii'];
+    const routeIds = state.activeRouteIds.length ? state.activeRouteIds : fallbackIds;
+    const stopIndex = Math.max(routeIds.indexOf(landmarkId), 0);
+    const isLastStop = stopIndex === routeIds.length - 1;
+    return {
+      autoDrive: false,
+      routeJumpRequest: { landmarkId, token: Date.now() },
+      arrivedLandmarkIds: routeIds.slice(0, stopIndex),
+      arrivalNotice: { landmarkId },
+      nearbyLandmarkId: landmarkId,
+      selectedLandmarkId: null,
+      focusPanelOpen: false,
+      modelViewerOpen: false,
+      guidedTourState: isLastStop ? 'FINISHED' : 'FOCUS_POI',
+      guidedTourLandmarkId: landmarkId,
+      guidedTourMessage: isLastStop ? '路线导览完成' : '已跳转到此站',
+      cameraMode: state.cameraMode === 'free' ? 'free' : 'follow',
+    };
+  }),
   resetVehicleTour: () => set((state) => ({
     autoDrive: false,
     tourResetToken: state.tourResetToken + 1,
@@ -68,11 +93,10 @@ export const useAppStore = create((set, get) => ({
     guidedTourMessage: '',
     arrivalNotice: null,
     arrivedLandmarkIds: [],
+    routeJumpRequest: null,
     cameraMode: 'follow',
   })),
-  setNearbyLandmarkId: (nearbyLandmarkId) => set((state) => (
-    state.nearbyLandmarkId === nearbyLandmarkId ? state : { nearbyLandmarkId }
-  )),
+  setNearbyLandmarkId: (nearbyLandmarkId) => set({ nearbyLandmarkId }),
   setVehicleState: ({ vehicleSpeed, vehicleSteer, routeContext, routeProgress, routeDay, routeHour }) => set((state) => ({
     vehicleSpeed,
     vehicleSteer,
@@ -97,6 +121,7 @@ export const useAppStore = create((set, get) => ({
     guidedTourMessage: '',
     arrivalNotice: null,
     arrivedLandmarkIds: [],
+    routeJumpRequest: null,
     cameraMode: 'follow',
   })),
   setActiveRouteGeometry: ({ coordinates = [], distanceKm = null } = {}) => set((state) => ({
@@ -116,6 +141,7 @@ export const useAppStore = create((set, get) => ({
     guidedTourMessage: '',
     arrivalNotice: null,
     arrivedLandmarkIds: [],
+    routeJumpRequest: null,
     cameraMode: 'follow',
   })),
   setGuidedTourState: ({ guidedTourState = 'IDLE', guidedTourLandmarkId = null, guidedTourMessage = '' } = {}) => set({

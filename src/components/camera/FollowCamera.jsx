@@ -5,6 +5,12 @@ import { useAppStore } from '../../state/useAppStore.js';
 import { landmarks, worldUnitsFromMeters } from '../../data/landmarks.js';
 import * as THREE from 'three';
 
+const followOffset = new THREE.Vector3(0, 3.2, -7.8);
+const lookOffset = new THREE.Vector3(0, 1.0, 1.8);
+const tempOffset = new THREE.Vector3();
+const tempLook = new THREE.Vector3();
+const mapTarget = new THREE.Vector3(0, 82, 18);
+const mapLookAt = new THREE.Vector3(0, 0, 2);
 // Satellite-like framing: scene units are used intentionally because a
 // literal real-world chase distance is invisible on a country-scale map.
 const followOffset = new THREE.Vector3(0, 0.07, -0.15);
@@ -25,6 +31,8 @@ export function FollowCamera({ targetRef }) {
   const camera = useThree((state) => state.camera);
   const cameraMode = useAppStore((state) => state.cameraMode);
   const selectedLandmarkId = useAppStore((state) => state.selectedLandmarkId);
+  const controlsRef = useRef(null);
+  const lastModeRef = useRef(cameraMode);
   const vehicleSpeed = useAppStore((state) => state.vehicleSpeed);
   const controlsRef = useRef(null);
   const lastModeRef = useRef(cameraMode);
@@ -40,6 +48,18 @@ export function FollowCamera({ targetRef }) {
 
     if (cameraMode === 'free') {
       followInitializedRef.current = false;
+      // 自由视角只在刚切换时把 OrbitControls 目标放到小车附近，之后不再强制跟随。
+      if (lastModeRef.current !== 'free' && controlsRef.current) {
+        controlsRef.current.target.copy(targetWorldPosition);
+        controlsRef.current.update();
+      }
+      lastModeRef.current = cameraMode;
+      return;
+    }
+
+    lastModeRef.current = cameraMode;
+
+    if (cameraMode === 'free') {
       // 自由视角只在刚切换时把 OrbitControls 目标放到小车附近，之后不再强制跟随。
       if (lastModeRef.current !== 'free' && controlsRef.current) {
         controlsRef.current.target.copy(targetWorldPosition);
@@ -70,29 +90,11 @@ export function FollowCamera({ targetRef }) {
     }
 
     // 跟随视角：相机位于小车后上方，平滑看向车头前方，避免贴车晃动。
-    const speedRatio = THREE.MathUtils.clamp(vehicleSpeed / 228, 0, 1);
-    tempOffset.copy(followOffset);
-    tempOffset.y += speedRatio * 0.025;
-    tempOffset.z -= speedRatio * 0.045;
-    tempOffset.applyQuaternion(targetYawQuaternion);
-    tempLook.copy(lookOffset).applyQuaternion(targetYawQuaternion).add(targetWorldPosition);
+    tempOffset.copy(followOffset).applyQuaternion(targetWorldQuaternion);
+    tempLook.copy(lookOffset).add(targetWorldPosition);
     cameraTarget.copy(targetWorldPosition).add(tempOffset);
-    if (!followInitializedRef.current) {
-      camera.position.copy(cameraTarget);
-      smoothedLookTarget.copy(tempLook);
-      camera.lookAt(smoothedLookTarget);
-      followInitializedRef.current = true;
-      return;
-    }
-    const followRate = THREE.MathUtils.lerp(0.52, 0.28, speedRatio);
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, cameraTarget.x, followRate, delta);
-    camera.position.z = THREE.MathUtils.damp(camera.position.z, cameraTarget.z, followRate, delta);
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, cameraTarget.y, THREE.MathUtils.lerp(0.46, 0.25, speedRatio), delta);
-    const lookRate = THREE.MathUtils.lerp(0.62, 0.34, speedRatio);
-    smoothedLookTarget.x = THREE.MathUtils.damp(smoothedLookTarget.x, tempLook.x, lookRate, delta);
-    smoothedLookTarget.y = THREE.MathUtils.damp(smoothedLookTarget.y, tempLook.y, lookRate, delta);
-    smoothedLookTarget.z = THREE.MathUtils.damp(smoothedLookTarget.z, tempLook.z, lookRate, delta);
-    camera.lookAt(smoothedLookTarget);
+    camera.position.lerp(cameraTarget, 0.095);
+    camera.lookAt(tempLook);
   });
 
   return (
@@ -101,7 +103,7 @@ export function FollowCamera({ targetRef }) {
       enabled={cameraMode === 'free'}
       enableDamping
       dampingFactor={0.08}
-      minDistance={worldUnitsFromMeters(5)}
+      minDistance={8}
       maxDistance={130}
       maxPolarAngle={Math.PI * 0.48}
     />

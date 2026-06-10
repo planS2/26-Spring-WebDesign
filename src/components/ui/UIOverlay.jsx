@@ -97,6 +97,15 @@ const driveRouteCopy = {
       restart: '重新导览',
       switchRoute: '切换路线',
       home: '返回首页',
+      tourSpeed: '导览速度',
+      playRate: '播放倍率',
+      speedLeisure: '悠闲 1x',
+      speedStandard: '标准 4x',
+      speedFast: '快速 8x',
+      speedDemo: '演示 20x',
+      jumpHint: '点击跳转到此站',
+      continueFromHere: '从此处继续导览',
+      speedLimit: '道路限速',
     },
   },
   zh: {
@@ -189,6 +198,15 @@ const driveRouteCopy = {
       restart: '重新导览',
       switchRoute: '切换路线',
       home: '返回首页',
+      tourSpeed: '导览速度',
+      playRate: '播放倍率',
+      speedLeisure: '悠闲 1x',
+      speedStandard: '标准 4x',
+      speedFast: '快速 8x',
+      speedDemo: '演示 20x',
+      jumpHint: '点击跳转到此站',
+      continueFromHere: '从此处继续导览',
+      speedLimit: '道路限速',
     },
   },
 };
@@ -242,6 +260,7 @@ export function UIOverlay({ isStarted, onClose }) {
     guidedTourLandmarkId,
     guidedTourMessage,
     vehicleSpeed,
+    tourSpeedMultiplier,
     arrivalNotice,
     arrivedLandmarkIds,
     focusPanelOpen,
@@ -251,12 +270,14 @@ export function UIOverlay({ isStarted, onClose }) {
     setModelViewerOpen,
     setCameraMode,
     setAutoDrive,
+    setTourSpeedMultiplier,
     resetVehicleTour,
     continueVehicleTour,
     toggleMapView,
     toggleAutoDrive,
     openLandmarkFocus,
     clearLandmark,
+    jumpToRouteStop,
   } = useAppStore();
 
   const nearbyLandmark = landmarks.find((item) => item.id === nearbyLandmarkId);
@@ -277,6 +298,12 @@ export function UIOverlay({ isStarted, onClose }) {
   const routeSegment = routeContext?.segment;
   const routeProfile = routeContext?.profile;
   const panelCopy = routeCopy.tourPanel;
+  const speedPresets = [
+    { label: panelCopy.speedLeisure, value: 1 },
+    { label: panelCopy.speedStandard, value: 4 },
+    { label: panelCopy.speedFast, value: 8 },
+    { label: panelCopy.speedDemo, value: 20 },
+  ];
   const displayRouteIds = activeRouteIds.length ? activeRouteIds : ['milan_duomo', 'venice_rialto', 'florence_duomo', 'pisa', 'colosseum', 'pompeii'];
   const routeStops = displayRouteIds.map((id) => landmarks.find((item) => item.id === id)).filter(Boolean);
   const progressPercent = Math.round((routeProgress ?? 0) * 100);
@@ -291,17 +318,7 @@ export function UIOverlay({ isStarted, onClose }) {
   const timelineLandmark = landmarks.find((item) => item.id === timelineLandmarkId);
   const timelineMeta = getArrivalMeta(timelineLandmark?.id);
   const visitedCount = Math.max(arrivedLandmarkIds.length, isComplete ? routeStops.length : 0);
-  const distanceText = activeRouteDistanceKm
-    ? `${activeRouteDistanceKm < 10 ? activeRouteDistanceKm.toFixed(1) : Math.round(activeRouteDistanceKm)} km`
-    : '约 920 km';
-  const showPoiBriefing = Boolean(
-    displayLandmark
-      && !focusPanelOpen
-      && cameraMode !== 'map'
-      && !arrivalLandmark
-      && !timelineLandmark
-      && !isComplete,
-  );
+  const distanceText = activeRouteDistanceKm ? `${Math.round(activeRouteDistanceKm)} km` : '约 920 km';
 
   useEffect(() => {
     if (!isStarted) return undefined;
@@ -352,6 +369,7 @@ export function UIOverlay({ isStarted, onClose }) {
     routeLocked,
     selectedLandmarkId,
     setAutoDrive,
+    setTourSpeedMultiplier,
     resetVehicleTour,
     continueVehicleTour,
     setFocusPanelOpen,
@@ -411,7 +429,7 @@ export function UIOverlay({ isStarted, onClose }) {
       </button>
 
       <aside className="tour-info-panel" aria-live="polite">
-        <p className="tour-info-panel__eyebrow">{language === 'zh' ? '路线便签' : 'Route notes'}</p>
+        <p className="tour-info-panel__eyebrow">小车导览</p>
         <h2>{panelCopy.defaultRoute}</h2>
         <dl>
           <div><dt>{panelCopy.routeName}</dt><dd>{activeRouteIds.length ? panelCopy.freeRoute : panelCopy.defaultRoute}</dd></div>
@@ -419,8 +437,34 @@ export function UIOverlay({ isStarted, onClose }) {
           <div><dt>{panelCopy.nextStop}</dt><dd>{isComplete ? panelCopy.finished : getLandmarkName(nextStop, language) || panelCopy.finished}</dd></div>
           <div><dt>{panelCopy.progress}</dt><dd>{progressPercent}%</dd></div>
           <div><dt>{panelCopy.speed}</dt><dd>{Math.round(vehicleSpeed ?? 0)} {routeCopy.speedUnit}</dd></div>
+          <div><dt>{panelCopy.playRate}</dt><dd>{tourSpeedMultiplier}x</dd></div>
         </dl>
         <div className="tour-info-panel__progress"><span style={{ width: `${progressPercent}%` }} /></div>
+        <p className="tour-info-panel__subhead">{panelCopy.tourSpeed}</p>
+        <div className="tour-speed-controls">
+          <div className="tour-speed-controls__presets">
+            {speedPresets.map((preset) => (
+              <button
+                key={preset.value}
+                type="button"
+                className={tourSpeedMultiplier === preset.value ? 'is-active' : ''}
+                onClick={() => setTourSpeedMultiplier(preset.value)}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+          <label>
+            <span>{tourSpeedMultiplier}x</span>
+            <input
+              type="range"
+              min="1"
+              max="30"
+              value={tourSpeedMultiplier}
+              onChange={(event) => setTourSpeedMultiplier(event.target.value)}
+            />
+          </label>
+        </div>
         <p className="tour-info-panel__subhead">{panelCopy.viewMode}</p>
         <div className="tour-info-panel__view-actions">
           <button type="button" className={cameraMode === 'follow' ? 'is-active' : ''} onClick={() => setCameraMode('follow')}>{panelCopy.followView}</button>
@@ -436,7 +480,7 @@ export function UIOverlay({ isStarted, onClose }) {
         </div>
       </aside>
 
-      {arrivalLandmark && (
+      {arrivalLandmark && !isComplete && (
         <aside className="arrival-card" role="dialog" aria-live="polite">
           <p>{panelCopy.arrivalNotice} · {panelCopy.arrived}</p>
           <h2>{getLandmarkName(arrivalLandmark, language)}</h2>
@@ -448,7 +492,7 @@ export function UIOverlay({ isStarted, onClose }) {
           </div>
           <p className="arrival-card__reason">推荐理由：适合作为本段路线的重点停靠点，建议短暂停留拍照并查看建筑细节。</p>
           <div className="arrival-card__actions">
-            <button type="button" onClick={continueVehicleTour}>{panelCopy.continue}</button>
+            <button type="button" onClick={continueVehicleTour}>{panelCopy.continueFromHere}</button>
             <button type="button" onClick={() => openLandmarkFocus(arrivalLandmark.id)}>{panelCopy.detail}</button>
           </div>
         </aside>
@@ -468,7 +512,11 @@ export function UIOverlay({ isStarted, onClose }) {
                 key={stop.id}
                 type="button"
                 className={`route-timeline__stop ${reached ? 'is-reached' : ''} ${current ? 'is-current' : ''}`}
-                onClick={() => setTimelineLandmarkId(stop.id)}
+                title={panelCopy.jumpHint}
+                onClick={() => {
+                  setTimelineLandmarkId(stop.id);
+                  jumpToRouteStop(stop.id);
+                }}
               >
                 <span>{index + 1}</span>
                 <strong>{getLandmarkName(stop, language)}</strong>
@@ -526,7 +574,7 @@ export function UIOverlay({ isStarted, onClose }) {
         <div className={`hud-road is-visible hud-road--${routeSegment.trafficState}`}>
           <div>
             <span>{routeCopy.segmentTypes[routeSegment.type] ?? routeProfile?.roadLabel ?? routeSegment.type}</span>
-            <strong>{routeSegment.speedLimit} {routeCopy.speedUnit}</strong>
+            <strong>{panelCopy.speedLimit} {Math.round(routeSegment.speedLimit)} {routeCopy.speedUnit}</strong>
           </div>
           <p>
             {routeCopy.trafficLabels[routeSegment.trafficState] ?? routeProfile?.trafficLabel ?? routeSegment.trafficState}

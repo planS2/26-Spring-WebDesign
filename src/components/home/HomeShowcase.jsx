@@ -1,10 +1,9 @@
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { landmarks as baseLandmarks, lngLatToWorld } from '../../data/landmarks.js';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { landmarks } from '../../data/landmarks.js';
 import { useAppStore } from '../../state/useAppStore.js';
-import { fetchRouteMetrics, useRouteMetrics } from '../../hooks/useRouteMetrics.js';
 import liveLandmarksData from '../../../public/data/live-landmarks.json';
 
 const versions = [
@@ -2719,10 +2718,7 @@ export function HomeShowcase({ onOpenDrive }) {
   const [accountPlanReady, setAccountPlanReady] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [visibleCount, setVisibleCount] = useState(12);
-  const [reviewVisibleCount, setReviewVisibleCount] = useState(6);
-  const [detailStopId, setDetailStopId] = useState(null);
-  const [onboardingOpen, setOnboardingOpen] = useState(() => hasEnteredHome && window.localStorage.getItem(ONBOARDING_SEEN_KEY) !== '1');
-  const routeMetricsQuery = useRouteMetrics(routeIds);
+  const setActiveRouteIds = useAppStore((state) => state.setActiveRouteIds);
 
   const options = useMemo(() => ({
     regions: [...new Set(landmarks.map(regionFor))].sort(),
@@ -2937,25 +2933,14 @@ export function HomeShowcase({ onOpenDrive }) {
     setActiveRouteIds(route.ids);
     setActivePage('planner');
   };
-  const startRoute = async (route) => {
+  const startRoute = (route) => {
     setRouteIds(route.ids);
     setLockedIds(new Set());
     setActiveRouteIds(route.ids);
-    const metrics = await fetchRouteMetrics(route.ids).catch(() => null);
-    if (metrics?.geometryCoordinates?.length) {
-      setActiveRouteGeometry({ coordinates: metrics.geometryCoordinates, distanceKm: metrics.distanceKm });
-    }
     onOpenDrive(route.ids[0] ?? null);
   };
-  const openDriveWithCurrentRoute = async (landmarkId = null) => {
+  const openDriveWithCurrentRoute = (landmarkId = null) => {
     setActiveRouteIds(routeIds);
-    let metrics = routeMetricsQuery.data;
-    if (!metrics?.geometryCoordinates?.length) {
-      metrics = await fetchRouteMetrics(routeIds).catch(() => null);
-    }
-    if (metrics?.geometryCoordinates?.length) {
-      setActiveRouteGeometry({ coordinates: metrics.geometryCoordinates, distanceKm: metrics.distanceKm });
-    }
     onOpenDrive(landmarkId);
   };
   const saveAuthPayload = (payload) => {
@@ -3076,7 +3061,6 @@ export function HomeShowcase({ onOpenDrive }) {
     onOpenDetail: (id) => setDetailStopId(id),
     onSignIn: () => setAuthDialogOpen(true),
     onSignOut: handleSignOut,
-    onHelp: () => setOnboardingOpen(true),
     onOpenDrive: openDriveWithCurrentRoute,
   };
 

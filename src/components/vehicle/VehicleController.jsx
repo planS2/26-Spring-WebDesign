@@ -80,6 +80,8 @@ export function VehicleController({ bodyRef, drivingEnabled, driveEntry }) {
   const arrivalNotice = useAppStore((state) => state.arrivalNotice);
   const showArrivalNotice = useAppStore((state) => state.showArrivalNotice);
   const cameraMode = useAppStore((state) => state.cameraMode);
+  const tourSpeedMultiplier = useAppStore((state) => state.tourSpeedMultiplier);
+  const routeJumpRequest = useAppStore((state) => state.routeJumpRequest);
   const progressRef = useRef(START_PROGRESS);
   const speedRef = useRef(0);
   const targetSpeedRef = useRef(0);
@@ -93,8 +95,7 @@ export function VehicleController({ bodyRef, drivingEnabled, driveEntry }) {
   const focusTimerRef = useRef(0);
   const visitedLandmarksRef = useRef(new Set());
   const previousProgressRef = useRef(START_PROGRESS);
-  const uiSyncElapsedRef = useRef(UI_SYNC_INTERVAL);
-  const nearbyLandmarkIdRef = useRef(null);
+  const handledJumpTokenRef = useRef(null);
 
   const routeCurve = activeRoute.curve;
 
@@ -109,11 +110,23 @@ export function VehicleController({ bodyRef, drivingEnabled, driveEntry }) {
       .sort((a, b) => a.progress - b.progress);
   }, [activeRoute.routeIds, routeCurve]);
 
+  const stationTriggers = useMemo(() => {
+    const routeStopIds = activeRoute.routeIds.length
+      ? activeRoute.routeIds
+      : ['milan_duomo', 'venice_rialto', 'florence_duomo', 'pisa', 'colosseum', 'pompeii'];
+
+    return routeStopIds
+      .filter((id, index, ids) => ids.indexOf(id) === index)
+      .map((id) => ({ id, progress: getInitialProgress(id, routeCurve) }))
+      .sort((a, b) => a.progress - b.progress);
+  }, [activeRoute.routeIds, routeCurve]);
+
   useFrame((_, delta) => {
     const vehicle = bodyRef.current;
     if (!vehicle) return;
 
-    const routeInitKey = `${driveEntry?.mode ?? 'route-start'}-${tourResetToken}-${terrain.version}-${activeRoute.source}-${activeRoute.signature}`;
+    const routeSignature = activeRoute.points.map((point) => `${point.x.toFixed(2)},${point.z.toFixed(2)}`).join('|');
+    const routeInitKey = `${initialLandmarkId ?? 'start'}-${tourResetToken}-${terrain.version}-${activeRoute.source}-${routeSignature}`;
     if (initializedTargetRef.current !== routeInitKey) {
       progressRef.current = START_PROGRESS;
       speedRef.current = 0;
@@ -134,6 +147,30 @@ export function VehicleController({ bodyRef, drivingEnabled, driveEntry }) {
       setNearbyLandmarkId(initialNearbyLandmarkId);
       setGuidedTourState(getGuidedTourPayload(GUIDED_TOUR_STATES.IDLE));
       setVehicleState({ vehicleSpeed: 0, vehicleSteer: 0, routeContext: getRouteContext(progressRef.current, activeRoute, routeCurve), ...getRouteTimeline(progressRef.current) });
+    }
+
+    if (routeJumpRequest?.token && handledJumpTokenRef.current !== routeJumpRequest.token) {
+      const jumpProgress = getInitialProgress(routeJumpRequest.landmarkId, routeCurve);
+      progressRef.current = THREE.MathUtils.clamp(jumpProgress, 0, 1);
+      previousProgressRef.current = progressRef.current;
+      speedRef.current = 0;
+      targetSpeedRef.current = 0;
+      steerRef.current = 0;
+      poseYawRef.current = Number.NaN;
+      handledJumpTokenRef.current = routeJumpRequest.token;
+      applyCurvePose(vehicle, routeCurve, progressRef.current, 0, poseYawRef, delta);
+      setNearbyLandmarkId(routeJumpRequest.landmarkId);
+      setVehicleState({
+        vehicleSpeed: 0,
+        vehicleSteer: 0,
+        routeContext: getRouteContext(progressRef.current, activeRoute, routeCurve),
+        ...getRouteTimeline(progressRef.current),
+      });
+      if (progressRef.current >= 0.999) {
+        guidedTourStateRef.current = GUIDED_TOUR_STATES.FINISHED;
+        setGuidedTourState(getGuidedTourPayload(GUIDED_TOUR_STATES.FINISHED, routeJumpRequest.landmarkId, '路线导览完成'));
+      }
+      return;
     }
 
     if (!drivingEnabled) {
@@ -247,9 +284,8 @@ export function VehicleController({ bodyRef, drivingEnabled, driveEntry }) {
     speedRef.current = THREE.MathUtils.clamp(targetSpeedRef.current, speedRef.current - maxDelta, speedRef.current + maxDelta);
     if (Math.abs(speedRef.current) < 0.05) speedRef.current = 0;
 
-    const travelSpeedKmh = Math.sign(speedRef.current) * Math.min(Math.abs(speedRef.current), 145);
-    const progressDelta = (travelSpeedKmh / Math.max(activeRoute.distanceKm ?? activeRoute.distance ?? activeRoute.totalDistanceKm ?? 1, 1) / 3600)
-      * VEHICLE_TUNING.simulationTimeScale * delta;
+    const progressDelta = (speedRef.current / Math.max(activeRoute.distanceKm ?? activeRoute.distance ?? activeRoute.totalDistanceKm ?? 1, 1) / 3600)
+      * VEHICLE_TUNING.simulationTimeScale * tourSpeedMultiplier * delta;
 
     // 使用 delta time 推进路线进度，并始终限制在 0-1，避免不同帧率或自动巡航导致越界。
     const nextProgress = THREE.MathUtils.clamp(progressRef.current + progressDelta, 0, 1);
@@ -276,27 +312,27 @@ export function VehicleController({ bodyRef, drivingEnabled, driveEntry }) {
       guidedTourStateRef.current = GUIDED_TOUR_STATES.FINISHED;
       setGuidedTourState(getGuidedTourPayload(GUIDED_TOUR_STATES.FINISHED));
     }
+    previousProgressRef.current = progressRef.current;
+
+    if (progressRef.current >= 1 && speedRef.current > 0) {
+      speedRef.current = 0;
+      targetSpeedRef.current = 0;
+      if (autoDrive) setAutoDrive(false);
+      guidedTourStateRef.current = GUIDED_TOUR_STATES.FINISHED;
+      setGuidedTourState(getGuidedTourPayload(GUIDED_TOUR_STATES.FINISHED));
+    }
 
     const targetSteer = applyCurvePose(vehicle, routeCurve, progressRef.current, speedRef.current, poseYawRef, posePitchRef, poseRollRef, delta);
     const steerDeltaCap = VEHICLE_TUNING.maxSteerRatePerSec * delta;
     steerRef.current = THREE.MathUtils.clamp(targetSteer, steerRef.current - steerDeltaCap, steerRef.current + steerDeltaCap);
-    const nextNearbyLandmarkId = nearbyLandmark?.id ?? null;
-    if (nearbyLandmarkIdRef.current !== nextNearbyLandmarkId) {
-      nearbyLandmarkIdRef.current = nextNearbyLandmarkId;
-      setNearbyLandmarkId(nextNearbyLandmarkId);
-    }
-
-    uiSyncElapsedRef.current += delta;
-    if (uiSyncElapsedRef.current >= UI_SYNC_INTERVAL || progressRef.current >= 1) {
-      uiSyncElapsedRef.current = 0;
-      setVehicleState({
-        vehicleSpeed: Math.abs(speedRef.current) * VEHICLE_TUNING.displaySpeedMultiplier,
-        vehicleSteer: steerRef.current,
-        routeContext: getRouteContext(progressRef.current, activeRoute, routeCurve),
-        routeProgress: progressRef.current,
-        ...getRouteTimeline(progressRef.current),
-      });
-    }
+    setNearbyLandmarkId(nearbyLandmark?.id ?? null);
+    setVehicleState({
+      vehicleSpeed: Math.abs(speedRef.current),
+      vehicleSteer: steerRef.current,
+      routeContext: getRouteContext(progressRef.current, activeRoute, routeCurve),
+      routeProgress: progressRef.current,
+      ...getRouteTimeline(progressRef.current),
+    });
 
     if (speedRef.current !== 0 && !routeLocked && guidedTourStateRef.current !== GUIDED_TOUR_STATES.FOCUS_POI && cameraMode !== 'free') setCameraMode('follow');
   });
@@ -454,7 +490,7 @@ function getRouteContext(progress, activeRoute, curve) {
   const point = {
     id: `route-${routePoint.index}`,
     landmarkId: null,
-    roadType: activeRoute.source === 'routed' ? '实景道路' : '规划路线',
+    roadType: activeRoute.source === 'osrm' ? '实景道路' : '规划路线',
   };
   const segment = {
     id: activeRoute.source === 'routed' ? 'routed-road' : 'planned-road',
@@ -462,8 +498,8 @@ function getRouteContext(progress, activeRoute, curve) {
     trafficState: 'normal',
     speedLimit: activeRoute.source === 'routed' ? 90 : 70,
     profile: {
-      label: activeRoute.source === 'routed' ? '道路路线' : '规划路线',
-      surfaceLabel: activeRoute.source === 'routed' ? '地图道路' : '导览路径',
+      label: activeRoute.source === 'osrm' ? '道路路线' : '规划路线',
+      surfaceLabel: activeRoute.source === 'osrm' ? '地图道路' : '导览路径',
       speedFactor: 0.9,
       roughness: activeRoute.source === 'routed' ? 0.008 : 0.02,
       turnLean: 0.92,
@@ -485,8 +521,7 @@ function getRouteContext(progress, activeRoute, curve) {
 function getCurvatureSpeedFactor(progress, curve) {
   if (!curve) return 1;
   curve.getTangentAt(progress, tangentPoint);
-  const lookAheadProgress = VEHICLE_TUNING.minLookAheadDistance / Math.max(curve.totalDistance, Number.EPSILON);
-  curve.getTangentAt(THREE.MathUtils.clamp(progress + lookAheadProgress, 0, 1), aheadTangent);
+  curve.getTangentAt(THREE.MathUtils.clamp(progress + VEHICLE_TUNING.lookAheadDistance * 0.66, 0, 1), aheadTangent);
   flatTangent.copy(tangentPoint).setY(0).normalize();
   flatAheadTangent.copy(aheadTangent).setY(0).normalize();
   if (flatTangent.lengthSq() === 0 || flatAheadTangent.lengthSq() === 0) return 1;
@@ -515,19 +550,12 @@ function getLandmarkProgress(landmarkId, curve) {
   return closestProgress;
 }
 
-function applyCurvePose(vehicle, curve, progress, speed, poseYawRef, posePitchRef, poseRollRef, delta) {
+function applyCurvePose(vehicle, curve, progress, speed, poseYawRef, delta) {
   const safeProgress = THREE.MathUtils.clamp(progress, 0, 1);
   curve.getPointAt(safeProgress, currentPoint);
   // 小车朝向直接取路线切线，并向前采样一小段用于计算转向角。
   curve.getTangentAt(safeProgress, tangentPoint);
-  const speedRatio = THREE.MathUtils.clamp(Math.abs(speed) / VEHICLE_TUNING.maxSpeed, 0, 1);
-  const lookAheadWorldDistance = THREE.MathUtils.lerp(
-    VEHICLE_TUNING.minLookAheadDistance,
-    VEHICLE_TUNING.maxLookAheadDistance,
-    speedRatio,
-  );
-  const lookAheadProgress = lookAheadWorldDistance / Math.max(curve.totalDistance, Number.EPSILON);
-  curve.getTangentAt(THREE.MathUtils.clamp(safeProgress + lookAheadProgress, 0, 1), aheadTangent);
+  curve.getTangentAt(THREE.MathUtils.clamp(safeProgress + VEHICLE_TUNING.lookAheadDistance, 0, 1), aheadTangent);
 
   flatTangent.copy(tangentPoint).setY(0).normalize();
   if (flatTangent.lengthSq() === 0) return 0;
@@ -609,14 +637,15 @@ export function VehicleChassis({ bodyRef }) {
   const rearLeftRef = useRef();
   const rearRightRef = useRef();
   const vehicleSpeed = useAppStore((state) => state.vehicleSpeed);
+  const tourSpeedMultiplier = useAppStore((state) => state.tourSpeedMultiplier);
   const vehicleSteer = useAppStore((state) => state.vehicleSteer);
   const routeContext = useAppStore((state) => state.routeContext);
   const autoDrive = useAppStore((state) => state.autoDrive);
   const wheelSpin = useRef(0);
 
   useFrame((_, delta) => {
-    wheelSpin.current += vehicleSpeed * delta * 0.08;
-    const speedRatio = Math.min(vehicleSpeed / 228, 1);
+    wheelSpin.current += vehicleSpeed * Math.max(tourSpeedMultiplier, 1) * delta * 0.045;
+    const speedRatio = Math.min(vehicleSpeed / 130, 1);
     const roughness = routeContext?.profile?.roughness ?? 0.08;
     const turnLean = routeContext?.profile?.turnLean ?? 1;
     const bodyLean = -vehicleSteer * turnLean * Math.min(0.1 + speedRatio * 0.05, 0.15);
@@ -640,7 +669,7 @@ export function VehicleChassis({ bodyRef }) {
     }
 
     if (headLightRef.current) {
-      headLightRef.current.intensity += ((vehicleSpeed > 0.4 ? 1.35 : 0.62) - headLightRef.current.intensity) * 0.1;
+      headLightRef.current.intensity += ((vehicleSpeed > 0.4 ? 1.55 : 0.72) - headLightRef.current.intensity) * 0.1;
     }
 
     for (const wheel of [rearLeftRef.current, rearRightRef.current]) {
@@ -655,8 +684,12 @@ export function VehicleChassis({ bodyRef }) {
   });
 
   return (
-    <group ref={bodyRef} scale={VEHICLE_SCALE}>
+    <group ref={bodyRef} scale={0.18}>
       <group ref={rootRef}>
+        <mesh position={[0, 0.08, -0.18]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[1.85, 32]} />
+          <meshBasicMaterial color="#263341" transparent opacity={0.18} depthWrite={false} />
+        </mesh>
         <mesh castShadow position={[0, 0.58, -0.02]}>
           <boxGeometry args={[2.16, 0.46, 4.12]} />
           <meshStandardMaterial color={autoDrive ? '#d29b62' : '#b87452'} roughness={0.48} metalness={0.16} />

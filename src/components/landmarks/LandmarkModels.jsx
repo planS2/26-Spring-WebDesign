@@ -105,9 +105,13 @@ function LandmarkModel({ landmark }) {
 
   return (
     <group position={[landmark.position[0], baseY, landmark.position[2]]} rotation={landmark.rotation} onClick={() => selectLandmark(landmark.id)}>
-      <mesh position={[0, 0.008, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <cylinderGeometry args={[0.3, 0.36, 0.016, 12]} />
+      <mesh position={[0, 0.018, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <cylinderGeometry args={[landmark.triggerRadius * 0.34, landmark.triggerRadius * 0.42, 0.035, 8]} />
         <meshStandardMaterial color={isActiveStop ? '#d6c49a' : '#b8aa8a'} roughness={0.86} transparent opacity={isActiveStop ? 0.52 : 0.28} />
+      </mesh>
+      <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[landmark.triggerRadius * 0.28, landmark.triggerRadius * 0.42, 64]} />
+        <meshBasicMaterial color={isActiveStop ? '#f0d490' : '#7ed0e4'} transparent opacity={isActiveStop ? 0.44 : 0.22} depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
       </mesh>
       <mesh position={[0, 0.016, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.3, 0.38, 40]} />
@@ -124,7 +128,7 @@ function LandmarkModel({ landmark }) {
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
       {isHighlighted && (
-        <Html position={[0, 0.95, 0]} center distanceFactor={18} transform={false} sprite occlude={false}>
+        <Html position={[0, 3.8, 0]} center distanceFactor={18} transform={false} sprite occlude={false}>
           <div className={`landmark-chip ${isActiveStop ? 'is-active' : ''}`}>
             {displayName}
           </div>
