@@ -23,6 +23,11 @@ export function FollowCamera({ targetRef }) {
 
   const cameraMode = useAppStore((state) => state.cameraMode);
   const selectedLandmarkId = useAppStore((state) => state.selectedLandmarkId);
+<<<<<<< HEAD
+=======
+  const controlsRef = useRef(null);
+  const lastModeRef = useRef(cameraMode);
+>>>>>>> 20e546486fdbe43b4c5e34e8596d6fc3d3eb9eb1
 
   const controlsRef = useRef(null);
   const lastModeRef = useRef(cameraMode);
@@ -47,7 +52,22 @@ export function FollowCamera({ targetRef }) {
 
     lastModeRef.current = cameraMode;
 
+<<<<<<< HEAD
     // 俯视视角：用于查看完整路线和地图布局。
+=======
+    if (cameraMode === 'free') {
+      // 自由视角只在刚切换时把 OrbitControls 目标放到小车附近，之后不再强制跟随。
+      if (lastModeRef.current !== 'free' && controlsRef.current) {
+        controlsRef.current.target.copy(targetWorldPosition);
+        controlsRef.current.update();
+      }
+      lastModeRef.current = cameraMode;
+      return;
+    }
+
+    lastModeRef.current = cameraMode;
+
+>>>>>>> 20e546486fdbe43b4c5e34e8596d6fc3d3eb9eb1
     if (cameraMode === 'map') {
       camera.position.lerp(mapTarget, 0.045);
       camera.lookAt(mapLookAt);
