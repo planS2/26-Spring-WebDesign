@@ -64,6 +64,13 @@ export function RoadRibbon() {
       dashGeometries.push(buildStrip(DASH_WIDTH, 0.044, start, Math.min(start + dashLength, points.length - 1)));
     }
 
+    const dashGeometries = [];
+    const dashEvery = activeRoute.source === 'osrm' ? 18 : 12;
+    const dashLength = Math.max(4, Math.floor(dashEvery * 0.48));
+    for (let start = 3; start < points.length - 2; start += dashEvery) {
+      dashGeometries.push(buildStrip(DASH_WIDTH, 0.044, start, Math.min(start + dashLength, points.length - 1)));
+    }
+
     const routeStopIds = activeRoute.routeIds.length ? activeRoute.routeIds : FALLBACK_ROUTE_IDS;
     const stationMarkers = routeStopIds.map((id) => {
       const landmark = landmarks.find((item) => item.id === id);
@@ -85,6 +92,24 @@ export function RoadRibbon() {
         position: [points[closestIndex].x, heights[closestIndex] + 0.09, points[closestIndex].z],
       };
     }).filter(Boolean);
+
+    const markerPoint = points[progressIndex] ?? points[0];
+    const vehicleMarker = [markerPoint.x, heights[progressIndex] + 0.13, markerPoint.z];
+    const roadsideMarkers = [];
+    const markerEvery = activeRoute.source === 'osrm' ? 52 : 32;
+    for (let index = 10; index < points.length - 10; index += markerEvery) {
+      const curr = points[index];
+      const next = points[Math.min(index + 1, points.length - 1)];
+      const prev = points[Math.max(index - 1, 0)];
+      const tangent = new THREE.Vector3().subVectors(next, prev).setY(0).normalize();
+      const normal = new THREE.Vector3(-tangent.z, 0, tangent.x);
+      const side = (index / markerEvery) % 2 === 0 ? 1 : -1;
+      roadsideMarkers.push({
+        id: `roadside-${index}`,
+        kind: index % (markerEvery * 2) === 0 ? 'lamp' : 'tree',
+        position: [curr.x + normal.x * side * 2.8, heights[index] + 0.05, curr.z + normal.z * side * 2.8],
+      });
+    }
 
     const markerPoint = points[progressIndex] ?? points[0];
     const vehicleMarker = [markerPoint.x, heights[progressIndex] + 0.13, markerPoint.z];

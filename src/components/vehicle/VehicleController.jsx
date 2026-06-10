@@ -121,6 +121,17 @@ export function VehicleController({ bodyRef, drivingEnabled, driveEntry }) {
       .sort((a, b) => a.progress - b.progress);
   }, [activeRoute.routeIds, routeCurve]);
 
+  const stationTriggers = useMemo(() => {
+    const routeStopIds = activeRoute.routeIds.length
+      ? activeRoute.routeIds
+      : ['milan_duomo', 'venice_rialto', 'florence_duomo', 'pisa', 'colosseum', 'pompeii'];
+
+    return routeStopIds
+      .filter((id, index, ids) => ids.indexOf(id) === index)
+      .map((id) => ({ id, progress: getInitialProgress(id, routeCurve) }))
+      .sort((a, b) => a.progress - b.progress);
+  }, [activeRoute.routeIds, routeCurve]);
+
   useFrame((_, delta) => {
     const vehicle = bodyRef.current;
     if (!vehicle) return;
@@ -302,15 +313,6 @@ export function VehicleController({ bodyRef, drivingEnabled, driveEntry }) {
       speedRef.current = 0;
       targetSpeedRef.current = 0;
       showArrivalNotice(arrivalByProgress.id);
-    }
-    previousProgressRef.current = progressRef.current;
-
-    if (progressRef.current >= 1 && speedRef.current > 0) {
-      speedRef.current = 0;
-      targetSpeedRef.current = 0;
-      if (autoDrive) setAutoDrive(false);
-      guidedTourStateRef.current = GUIDED_TOUR_STATES.FINISHED;
-      setGuidedTourState(getGuidedTourPayload(GUIDED_TOUR_STATES.FINISHED));
     }
     previousProgressRef.current = progressRef.current;
 

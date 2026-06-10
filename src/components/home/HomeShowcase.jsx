@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { landmarks } from '../../data/landmarks.js';
 import { useAppStore } from '../../state/useAppStore.js';
-import liveLandmarksData from '../../../public/data/live-landmarks.json';
+import liveLandmarksData from '../../data/live-landmarks.json';
 
 const versions = [
   {

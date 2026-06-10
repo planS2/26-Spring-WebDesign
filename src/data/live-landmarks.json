@@ -1,0 +1,1280 @@
+{
+  "generatedAt": "2026-05-10T14:49:32.543Z",
+  "sources": {
+    "wikidata": "https://query.wikidata.org/sparql",
+    "wikipedia": "https://www.mediawiki.org/wiki/API_REST_API",
+    "weather": "https://open-meteo.com/en/docs",
+    "routing": "https://project-osrm.org/"
+  },
+  "items": [
+    {
+      "id": "milan_duomo",
+      "wikidataId": "Q18068",
+      "name": {
+        "en": "Milan Cathedral",
+        "zh": "米兰主教座堂"
+      },
+      "coordinates": {
+        "lon": 9.190578,
+        "lat": 45.463968
+      },
+      "wikidata": {
+        "label": "Milan Cathedral",
+        "description": "cathedral church of Milan, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/20110724%20Milan%20Cathedral%205260.jpg",
+        "heritageId": "Q26971668",
+        "source": "https://www.wikidata.org/wiki/Q18068"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Milan Cathedral",
+          "extract": "Milan Cathedral, or Metropolitan Cathedral-Basilica of the Nativity of Saint Mary, is the cathedral church of Milan, Lombardy, Italy. Dedicated to the Nativity of St. Mary, it is the seat of the Archbishop of Milan, currently Archbishop Mario Delpini.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Milan_Cathedral",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Milan_Cathedral_from_Piazza_del_Duomo.jpg/330px-Milan_Cathedral_from_Piazza_del_Duomo.jpg",
+          "wikibaseItem": "Q18068",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "米兰主教座堂",
+          "extract": "米兰主教座堂，俗稱米蘭大教堂，位于意大利倫巴底大區米兰市中心的大教堂广场，是天主教米蘭總教區的主教座堂。它從始建到建成共花費了近六個世紀，是意大利最大的教堂 、和歐洲第二大及世界第三大教堂。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E7%B1%B3%E5%85%B0%E4%B8%BB%E6%95%99%E5%BA%A7%E5%A0%82",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Milan_Cathedral_from_Piazza_del_Duomo.jpg/330px-Milan_Cathedral_from_Piazza_del_Duomo.jpg",
+          "wikibaseItem": "Q18068",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 16.4,
+        "weatherCode": 61,
+        "windKph": 1.8,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "venice_rialto",
+      "wikidataId": "Q52505",
+      "name": {
+        "en": "Rialto Bridge",
+        "zh": "里亚托桥"
+      },
+      "coordinates": {
+        "lon": 12.335639,
+        "lat": 45.438008
+      },
+      "wikidata": {
+        "label": "Rialto Bridge",
+        "description": "one of four bridges spanning the Grand Canal in Venice, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Rialto%20Bridge%20at%20night1.jpg",
+        "heritageId": null,
+        "source": "https://www.wikidata.org/wiki/Q52505"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Rialto Bridge",
+          "extract": "The Rialto Bridge is the oldest of the four bridges spanning the Grand Canal in Venice, Italy. Connecting the sestieri (districts) of San Marco and San Polo, it has been rebuilt several times since its first construction as a pontoon bridge in 1173, and is now a significant tourist attraction in the city.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Rialto_Bridge",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Rialto_2025_4.jpg/330px-Rialto_2025_4.jpg",
+          "wikibaseItem": "Q52505",
+          "source": "wikipedia"
+        },
+        "zh": null
+      },
+      "weather": {
+        "temperatureC": 17.8,
+        "weatherCode": 61,
+        "windKph": 16.1,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "florence_duomo",
+      "wikidataId": "Q207528",
+      "name": {
+        "en": "Florence Cathedral",
+        "zh": "佛罗伦萨主教座堂"
+      },
+      "coordinates": {
+        "lat": 43.7731,
+        "lon": 11.2558
+      },
+      "wikidata": {
+        "label": "Flavia Pennetta",
+        "description": "Italian tennis player",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Pennetta%20RG15%20%281%29%20%2819300934912%29.jpg",
+        "heritageId": null,
+        "source": "https://www.wikidata.org/wiki/Q207528"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Florence Cathedral",
+          "extract": "Florence Cathedral, formally the Cathedral of Saint Mary of the Flower, is the cathedral of the Catholic Archdiocese of Florence in Florence, Italy. Commenced in 1296 in the Gothic style to a design of Arnolfo di Cambio and completed by 1436 with a dome engineered by Filippo Brunelleschi, the basilica's exterior is faced with polychrome marble panels in various shades of green and pink, alternated by white, and features an elaborate 19th-century Gothic Revival western façade by Emilio De Fabris.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Florence_Cathedral",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Cattedrale_di_Santa_Maria_del_Fiore_%E2%80%93_Il_Duomo_di_Firenze.jpg/330px-Cattedrale_di_Santa_Maria_del_Fiore_%E2%80%93_Il_Duomo_di_Firenze.jpg",
+          "wikibaseItem": "Q191739",
+          "source": "wikipedia"
+        },
+        "zh": null
+      },
+      "weather": {
+        "temperatureC": 16.9,
+        "weatherCode": 80,
+        "windKph": 3.7,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "pisa",
+      "wikidataId": "Q39054",
+      "name": {
+        "en": "Leaning Tower of Pisa",
+        "zh": "比萨斜塔"
+      },
+      "coordinates": {
+        "lon": 10.396624,
+        "lat": 43.72301
+      },
+      "wikidata": {
+        "label": "Leaning Tower of Pisa",
+        "description": "cathedral bell tower in Pisa, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Campanile%20D%C3%B4me%20-%20Pise%20%28IT52%29%20-%202022-08-31%20-%2020.jpg",
+        "heritageId": "Q43113623",
+        "source": "https://www.wikidata.org/wiki/Q39054"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Leaning Tower of Pisa",
+          "extract": "The Leaning Tower of Pisa, or simply the Tower of Pisa, is the campanile, or freestanding bell tower, of Pisa Cathedral. It is known for its nearly four-degree lean, the result of an unstable foundation. The tower is one of three structures in Pisa's Cathedral Square, which includes the cathedral and Pisa Baptistry. Over time, the flawed tower has become one of the most visited tourist attractions in the world as well as an architectural icon of Italy, receiving over 5 million visitors each year.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Leaning_Tower_of_Pisa",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Italy_-_Pisa_-_Leaning_Tower.jpg/330px-Italy_-_Pisa_-_Leaning_Tower.jpg",
+          "wikibaseItem": "Q39054",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "比萨斜塔",
+          "extract": "比萨斜塔 是一座位於意大利托斯卡纳大区比萨省比萨市城区北面國家建筑群的高塔，是比萨主教座堂的独立式钟楼，位于主教座堂的后面，與它相邻的主教座堂、洗礼堂、墓园均对11世纪至14世纪意大利建筑艺术有非常大的影响，故被联合国教育科学文化组织评选为世界遗产。比萨斜塔是奇迹广场三大建筑之一，始建于1173年，设计为垂直建造，但是在工程开始后不久便由于地基不均匀和土层松软而倾斜，1372年完工，塔身向東南傾斜。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E6%AF%94%E8%90%A8%E6%96%9C%E5%A1%94",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Italy_-_Pisa_-_Leaning_Tower.jpg/330px-Italy_-_Pisa_-_Leaning_Tower.jpg",
+          "wikibaseItem": "Q39054",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 17.4,
+        "weatherCode": 3,
+        "windKph": 5.4,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "colosseum",
+      "wikidataId": "Q10285",
+      "name": {
+        "en": "Colosseum",
+        "zh": "罗马斗兽场"
+      },
+      "coordinates": {
+        "lon": 12.492222222,
+        "lat": 41.890277777
+      },
+      "wikidata": {
+        "label": "Colosseum",
+        "description": "ancient Roman amphitheatre, a landmark of Rome, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Colosseo%202020.jpg",
+        "heritageId": "Q26971668",
+        "source": "https://www.wikidata.org/wiki/Q10285"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Colosseum",
+          "extract": "The Colosseum is an elliptical amphitheatre in the centre of the city of Rome, Italy, just east of the Roman Forum. It is the largest ancient amphitheatre ever built, and is the largest standing amphitheatre in the world. Construction began under the Emperor Vespasian in 72 and was completed in AD 80 under his successor and heir, Titus. Further modifications were made during the reign of Domitian. The three emperors who were patrons of the work are known as the Flavian dynasty, and the amphitheatre was named the Flavian Amphitheatre by later classicists and archaeologists for its association with their family name (Flavius).",
+          "pageUrl": "https://en.wikipedia.org/wiki/Colosseum",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Colosseo_2020.jpg/330px-Colosseo_2020.jpg",
+          "wikibaseItem": "Q10285",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "罗马斗兽场",
+          "extract": "羅馬競技場 是古罗马时期最大的橢圆形角鬥场，建於公元72年-82年间，现仅存遗迹位於現今義大利罗马市的中心。羅馬競技場是卵形的圓形劇場，也是目前最大的圓形劇場，使用材料包括洞石、凝灰岩及砖饰面的混凝土。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E7%BD%97%E9%A9%AC%E6%96%97%E5%85%BD%E5%9C%BA",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Colosseo_2020.jpg/330px-Colosseo_2020.jpg",
+          "wikibaseItem": "Q10285",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 22.1,
+        "weatherCode": 3,
+        "windKph": 19.5,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "pompeii",
+      "wikidataId": "Q43332",
+      "name": {
+        "en": "Pompeii",
+        "zh": "庞贝古城"
+      },
+      "coordinates": {
+        "lon": 14.489722,
+        "lat": 40.750556
+      },
+      "wikidata": {
+        "label": "Pompeii",
+        "description": "ancient Roman city near modern Naples, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Pompeii%20%284873744179%29.jpg",
+        "heritageId": null,
+        "source": "https://www.wikidata.org/wiki/Q43332"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Pompeii",
+          "extract": "Pompeii was a city in what is now the municipality of Pompei, near Naples, in the Campania region of Italy. Along with Herculaneum, Stabiae, and many surrounding villas, it was buried under 4 to 6 m of volcanic ash and pumice in the eruption of Mount Vesuvius in 79 AD.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Pompeii",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Theathres_of_Pompeii.jpg/330px-Theathres_of_Pompeii.jpg",
+          "wikibaseItem": "Q43332",
+          "source": "wikipedia"
+        },
+        "zh": null
+      },
+      "weather": {
+        "temperatureC": 22.3,
+        "weatherCode": 1,
+        "windKph": 14.2,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "pantheon_rome",
+      "wikidataId": "Q99309",
+      "name": {
+        "en": "Pantheon, Rome",
+        "zh": "万神殿 (罗马)"
+      },
+      "coordinates": {
+        "lon": 12.476944444,
+        "lat": 41.898611111
+      },
+      "wikidata": {
+        "label": "Pantheon",
+        "description": "ancient Roman temple in Rome, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Rome%20Pantheon%20front.jpg",
+        "heritageId": "Q26971668",
+        "source": "https://www.wikidata.org/wiki/Q99309"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Pantheon, Rome",
+          "extract": "The Pantheon is an ancient 2nd century Roman temple and, since AD 609, a Catholic church called the Basilica of St. Mary and the Martyrs in Rome, Italy. It is perhaps the most famous, and architecturally most influential, rotunda.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Pantheon%2C_Rome",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Pantheon_%28Rome%29_-_Right_side_and_front.jpg/330px-Pantheon_%28Rome%29_-_Right_side_and_front.jpg",
+          "wikibaseItem": "Q99309",
+          "source": "wikipedia"
+        },
+        "zh": null
+      },
+      "weather": {
+        "temperatureC": 22,
+        "weatherCode": 3,
+        "windKph": 19.5,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "trevi_fountain",
+      "wikidataId": "Q185382",
+      "name": {
+        "en": "Trevi Fountain",
+        "zh": "特莱维喷泉"
+      },
+      "coordinates": {
+        "lon": 12.483055555,
+        "lat": 41.900833333
+      },
+      "wikidata": {
+        "label": "Trevi Fountain",
+        "description": "Baroque fountain in Rome, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Trevi%20Fountain%2C%20Rome%2C%20Italy%202%20-%20May%202007.jpg",
+        "heritageId": null,
+        "source": "https://www.wikidata.org/wiki/Q185382"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Trevi Fountain",
+          "extract": "The Trevi Fountain is an 18th-century fountain in the Trevi district in Rome, Italy, designed by Italian architect Nicola Salvi and completed by Giuseppe Pannini in 1762. Standing 26.3 metres (86 ft) high and 49.15 metres (161.3 ft) wide, it is the largest Baroque fountain in the city and one of the most famous fountains in the world.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Trevi_Fountain",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Trevi_Fountain_-_Roma.jpg/330px-Trevi_Fountain_-_Roma.jpg",
+          "wikibaseItem": "Q185382",
+          "source": "wikipedia"
+        },
+        "zh": null
+      },
+      "weather": {
+        "temperatureC": 22,
+        "weatherCode": 3,
+        "windKph": 19.5,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "roman_forum",
+      "wikidataId": "Q180212",
+      "name": {
+        "en": "Roman Forum",
+        "zh": "古羅馬廣場"
+      },
+      "coordinates": {
+        "lon": 12.4852,
+        "lat": 41.8922
+      },
+      "wikidata": {
+        "label": "Roman Forum",
+        "description": "Ancient Roman center of the city, a landmark of Rome, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Foro%20Romano%20Musei%20Capitolini%20Roma.jpg",
+        "heritageId": "Q26971668",
+        "source": "https://www.wikidata.org/wiki/Q180212"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Roman Forum",
+          "extract": "The Roman Forum, also known by its Latin name Forum Romanum, is a rectangular forum (plaza) surrounded by the ruins of several important ancient government buildings at the centre of the city of Rome. Citizens of the ancient city referred to this space, originally a marketplace, as the Forum Magnum, or simply the Forum.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Roman_Forum",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Foro_Romano_Musei_Capitolini_Roma.jpg/330px-Foro_Romano_Musei_Capitolini_Roma.jpg",
+          "wikibaseItem": "Q180212",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "古羅馬廣場",
+          "extract": "古羅馬廣場 位於義大利羅馬帕拉蒂尼山與卡比托利欧山 之間，它是古羅馬時代的城市中心，包括一些羅馬最古老與最重要的建築。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E5%8F%A4%E7%BE%85%E9%A6%AC%E5%BB%A3%E5%A0%B4",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Foro_Romano_Musei_Capitolini_Roma.jpg/330px-Foro_Romano_Musei_Capitolini_Roma.jpg",
+          "wikibaseItem": "Q180212",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 22.1,
+        "weatherCode": 3,
+        "windKph": 19.5,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "uffizi_gallery",
+      "wikidataId": "Q51252",
+      "name": {
+        "en": "Uffizi",
+        "zh": "烏菲茲美術館"
+      },
+      "coordinates": {
+        "lon": 11.255277777,
+        "lat": 43.768333333
+      },
+      "wikidata": {
+        "label": "Uffizi Gallery",
+        "description": "palace and art museum in Florence, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Florence%2C%20Italy%20-%20panoramio%20%28125%29.jpg",
+        "heritageId": null,
+        "source": "https://www.wikidata.org/wiki/Q51252"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Uffizi",
+          "extract": "The Uffizi Gallery is a prominent art museum adjacent to the Piazza della Signoria in the Historic Centre of Florence in the region of Tuscany, Italy. One of the most important Italian museums and the most visited, it is also one of the largest and best-known in the world and holds a collection of priceless works, particularly from the period of the Italian Renaissance.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Uffizi",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Florence%2C_Italy_-_panoramio_%28125%29.jpg/330px-Florence%2C_Italy_-_panoramio_%28125%29.jpg",
+          "wikibaseItem": "Q51252",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "烏菲茲美術館",
+          "extract": "烏菲茲美術館 是在意大利佛羅倫斯最有名的一座藝術博物館。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E7%83%8F%E8%8F%B2%E8%8C%B2%E7%BE%8E%E8%A1%93%E9%A4%A8",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Florence%2C_Italy_Uffizi_Museum_-_panoramio_%285%29.jpg/330px-Florence%2C_Italy_Uffizi_Museum_-_panoramio_%285%29.jpg",
+          "wikibaseItem": "Q51252",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 16.8,
+        "weatherCode": 3,
+        "windKph": 4.3,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "siena_cathedral",
+      "wikidataId": "Q282554",
+      "name": {
+        "en": "Siena Cathedral",
+        "zh": "锡耶纳主教座堂"
+      },
+      "coordinates": {
+        "lon": 11.32869444,
+        "lat": 43.31758333
+      },
+      "wikidata": {
+        "label": "Siena Cathedral",
+        "description": "medieval church in Siena, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Duomo%20di%20Siena-9635.jpg",
+        "heritageId": null,
+        "source": "https://www.wikidata.org/wiki/Q282554"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Siena Cathedral",
+          "extract": "Siena Cathedral is a medieval church in Siena, Italy, dedicated from its earliest days as a Roman Catholic Marian church, and now dedicated to the Assumption of Mary.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Siena_Cathedral",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Duomo_di_Siena-9635.jpg/330px-Duomo_di_Siena-9635.jpg",
+          "wikibaseItem": "Q282554",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "锡耶纳主教座堂",
+          "extract": "锡耶纳圣母升天主教座堂 是天主教锡耶纳-埃尔萨谷口村-蒙塔尔奇诺总教区的主教座堂。黑白两色为其标志。为托斯卡纳哥特式风格，奥尔维耶托主教座堂与其相像。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E9%94%A1%E8%80%B6%E7%BA%B3%E4%B8%BB%E6%95%99%E5%BA%A7%E5%A0%82",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Duomo_di_Siena-9635.jpg/330px-Duomo_di_Siena-9635.jpg",
+          "wikibaseItem": "Q282554",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 16.8,
+        "weatherCode": 3,
+        "windKph": 4.1,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "verona_arena",
+      "wikidataId": "Q641556",
+      "name": {
+        "en": "Verona Arena",
+        "zh": "维罗纳圆形竞技场"
+      },
+      "coordinates": {
+        "lon": 10.994444444,
+        "lat": 45.438888888
+      },
+      "wikidata": {
+        "label": "Verona Arena",
+        "description": "Roman amphitheatre in Verona, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Italy%20-%20Verona%20-%20Arena.jpg",
+        "heritageId": "Q26971668",
+        "source": "https://www.wikidata.org/wiki/Q641556"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Verona Arena",
+          "extract": "The Verona Arena is a Roman amphitheatre located in the historic center of Verona, Italy. It is among the best-preserved ancient amphitheatres to have survived into the modern era. This remarkable state of preservation is largely due to systematic restoration efforts that began in the 16th century.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Verona_Arena",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Arena-XE3F2406a.jpg/330px-Arena-XE3F2406a.jpg",
+          "wikibaseItem": "Q641556",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "维罗纳圆形竞技场",
+          "extract": "维罗纳圆形竞技场 是意大利维罗纳的一座古罗马圆形竞技场，建於公元30年。至今仍在使用，並以其大型歌劇表演而聞名於世。它是義大利當前保存最完好的古代圆形竞技场建築。在古代，競技場的容量接近30,000人。但在1117年的一次大地震中，该结构的外圈和最上層几乎完全被摧毁，这些石材被重新用于周邊建筑。尽管如此，它还是给中世纪的游客留下了深刻的印象。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E7%BB%B4%E7%BD%97%E7%BA%B3%E5%9C%86%E5%BD%A2%E7%AB%9E%E6%8A%80%E5%9C%BA",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Italy_-_Verona_-_Arena.jpg/330px-Italy_-_Verona_-_Arena.jpg",
+          "wikibaseItem": "Q641556",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 20.2,
+        "weatherCode": 3,
+        "windKph": 10.6,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "st_marks_basilica",
+      "wikidataId": "Q172988",
+      "name": {
+        "en": "St Mark's Basilica",
+        "zh": "聖馬爾谷聖殿宗主教座堂"
+      },
+      "coordinates": {
+        "lon": 12.339722222,
+        "lat": 45.434444444
+      },
+      "wikidata": {
+        "label": "St Mark's Basilica",
+        "description": "church in Venice, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Venice%20-%20St.%20Marc%27s%20Basilica%2001.jpg",
+        "heritageId": "Q43113623",
+        "source": "https://www.wikidata.org/wiki/Q172988"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "St Mark's Basilica",
+          "extract": "The Patriarchal Cathedral Basilica of Saint Mark, commonly known as St Mark's Basilica, is the cathedral church of the Patriarchate of Venice; it became the episcopal seat of the Patriarch of Venice in 1807, replacing the earlier cathedral of San Pietro di Castello. It is dedicated to and holds the relics of Saint Mark the Evangelist, the patron saint of the city.",
+          "pageUrl": "https://en.wikipedia.org/wiki/St_Mark's_Basilica",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Venezia_Basilica_di_San_Marco_Fassade_2.jpg/330px-Venezia_Basilica_di_San_Marco_Fassade_2.jpg",
+          "wikibaseItem": "Q172988",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "聖馬爾谷聖殿宗主教座堂",
+          "extract": "聖馬爾谷聖殿宗主教座堂 是位於義大利威尼斯的天主教宗座圣殿，座落在聖馬可廣場東面，與總督宮相連。最初它是威尼斯公爵的專用教堂，1807起它成為天主教威尼斯宗主教區的主教座堂，同時是威尼斯宗主教駐地。其為拜占庭式建築的著名代表，有「金色聖堂」 的美譽。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E8%81%96%E9%A6%AC%E7%88%BE%E8%B0%B7%E8%81%96%E6%AE%BF%E5%AE%97%E4%B8%BB%E6%95%99%E5%BA%A7%E5%A0%82",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Venezia_Basilica_di_San_Marco_Fassade_2.jpg/330px-Venezia_Basilica_di_San_Marco_Fassade_2.jpg",
+          "wikibaseItem": "Q172988",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 17.8,
+        "weatherCode": 61,
+        "windKph": 16.1,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "doges_palace",
+      "wikidataId": "Q189883",
+      "name": {
+        "en": "Doge's Palace",
+        "zh": "威尼斯总督府"
+      },
+      "coordinates": {
+        "lon": 12.340416666,
+        "lat": 45.433666666
+      },
+      "wikidata": {
+        "label": "Doge's Palace",
+        "description": "palace in Venice, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/%28Venice%29%20Doge%27s%20Palace%20facing%20the%20sea.jpg",
+        "heritageId": "Q26971668",
+        "source": "https://www.wikidata.org/wiki/Q189883"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Doge's Palace",
+          "extract": "The Doge's Palace is a palace built in Venetian Gothic style, and one of the main landmarks of the city of Venice in northern Italy. The palace included government offices, a jail, and the residence of the Doge of Venice, the elected authority of the former Republic of Venice. It was originally built in 810, rebuilt in 1340 and extended and modified in the following centuries. It became a museum in 1923 and is one of 11 museums run by the Fondazione Musei Civici di Venezia.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Doge's_Palace",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/%28Venice%29_Doge%27s_Palace_and_campanile_of_St._Mark%27s_Basilica_facing_the_sea.jpg/330px-%28Venice%29_Doge%27s_Palace_and_campanile_of_St._Mark%27s_Basilica_facing_the_sea.jpg",
+          "wikibaseItem": "Q189883",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "威尼斯总督府",
+          "extract": "总督宫，是一座位于意大利威尼斯的哥特式建筑，往昔為在8世紀至18世紀存在的威尼斯共和國最高行政機關與法院，亦是威尼斯总督的住處。总督宫南面为威尼斯潟湖，西面为圣马可广场，北面为圣马可教堂。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E5%A8%81%E5%B0%BC%E6%96%AF%E6%80%BB%E7%9D%A3%E5%BA%9C",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Doge%27s_Palace_%28Venice%29-msu-2021-6487-.jpg/330px-Doge%27s_Palace_%28Venice%29-msu-2021-6487-.jpg",
+          "wikibaseItem": "Q189883",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 17.8,
+        "weatherCode": 61,
+        "windKph": 16.1,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "cinque_terre",
+      "wikidataId": "Q275639",
+      "name": {
+        "en": "Cinque Terre",
+        "zh": "五渔村"
+      },
+      "coordinates": {
+        "lon": 9.709444,
+        "lat": 44.126944
+      },
+      "wikidata": {
+        "label": "Cinque Terre",
+        "description": "rugged portion of coast on the Italian Riviera, Liguria",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Manarola%20NW%20Cemetery%20Corniglia%20Monterosso%20Cinque%20Terre%20Sep23%20A7C%2006872.jpg",
+        "heritageId": null,
+        "source": "https://www.wikidata.org/wiki/Q275639"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Cinque Terre",
+          "extract": "The Cinque Terre is a coastal area within Liguria, in the northwest of Italy. It lies in the west of La Spezia Province, and comprises five villages: Monterosso al Mare, Vernazza, Corniglia, Manarola and Riomaggiore. The coastline, the five villages, and the surrounding hillsides are all part of the Cinque Terre National Park, a UNESCO World Heritage Site. Vernazza is also one of \"I Borghi più belli d'Italia\".",
+          "pageUrl": "https://en.wikipedia.org/wiki/Cinque_Terre",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Cinque_Terre_%28Italy%2C_October_2020%29_-_24_%2850543603956%29.jpg/330px-Cinque_Terre_%28Italy%2C_October_2020%29_-_24_%2850543603956%29.jpg",
+          "wikibaseItem": "Q275639",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "五渔村",
+          "extract": "五渔村，又称五乡地、五色渔村，位于意大利利古里亚大区拉斯佩齐亚省海沿岸地区，是濱海蒙特羅索、韦尔纳扎、科尔尼利亚、马纳罗拉及里奥马焦雷等五个村镇的统称。1997年，五渔村和韦内雷港、帕尔马里亚岛、蒂诺岛、蒂内托岛一起被联合国教科文组织列入世界文化遗产名录，1999年被辟为国家公园。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E4%BA%94%E6%B8%94%E6%9D%91",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Vernazza_and_the_sea%2C_Cinque_Terre%2C_Italy.jpg/330px-Vernazza_and_the_sea%2C_Cinque_Terre%2C_Italy.jpg",
+          "wikibaseItem": "Q275639",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 15,
+        "weatherCode": 3,
+        "windKph": 5.1,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "lake_como",
+      "wikidataId": "Q15523",
+      "name": {
+        "en": "Lake Como",
+        "zh": "科莫湖"
+      },
+      "coordinates": {
+        "lon": 9.266666666,
+        "lat": 46
+      },
+      "wikidata": {
+        "label": "Lake Como",
+        "description": "lake in Lombardy, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Panoramic%20view%20of%20Como%20Lake%20%28Lago%20di%20Como%29%2C%20seen%20from%20the%20mountain%20Monte%20Grona%20-%20Plesio%20%28Como%29%202015-10-25.JPG",
+        "heritageId": null,
+        "source": "https://www.wikidata.org/wiki/Q15523"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Lake Como",
+          "extract": "Lake Como, also known as Lario, is a lake of glacial origin in Lombardy, Italy. It has an area of 146 km2 (56 sq mi), making it the third-largest lake in Italy, after Lake Garda and Lake Maggiore. At over 400 metres (1,300 ft) deep, it is one of the deepest lakes in Europe. Its characteristic \"Y\" shape resulted from the movement of the ancient Adda glacier, which was diverted by the mountainous terrain and carved the three branches.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Lake_Como",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Sentiero_del_Viandante_DSC_6340_%2814020554463%29.jpg/330px-Sentiero_del_Viandante_DSC_6340_%2814020554463%29.jpg",
+          "wikibaseItem": "Q15523",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "科莫湖",
+          "extract": "科莫湖，是意大利伦巴第大区的冰蚀湖。面积146平方公里，为加尔达湖及馬焦雷湖之后的意大利第三大湖。湖水深达400多米，为欧洲第五深的湖泊，或欧洲除挪威之外最深的湖泊。湖底在海平面下227米。湖面的特别之处为其三叉（字母Y）形状。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E7%A7%91%E8%8E%AB%E6%B9%96",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Sentiero_del_Viandante_DSC_6340_%2814020554463%29.jpg/330px-Sentiero_del_Viandante_DSC_6340_%2814020554463%29.jpg",
+          "wikibaseItem": "Q15523",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 17.6,
+        "weatherCode": 61,
+        "windKph": 2.4,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "mole_antonelliana",
+      "wikidataId": "Q201902",
+      "name": {
+        "en": "Mole Antonelliana",
+        "zh": "安托内利尖塔"
+      },
+      "coordinates": {
+        "lon": 7.69324,
+        "lat": 45.06898
+      },
+      "wikidata": {
+        "label": "Mole Antonelliana",
+        "description": "major landmark building in Turin, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Mole%20Antonelliana%20in%20Turin.jpg",
+        "heritageId": "Q26971668",
+        "source": "https://www.wikidata.org/wiki/Q201902"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Mole Antonelliana",
+          "extract": "The Mole Antonelliana is a major landmark building in Turin, Italy, named after its architect, Alessandro Antonelli. A mole in Italian is a building of monumental proportions.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Mole_Antonelliana",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Mole_Antonelliana_%28Torino%29_09.jpg/330px-Mole_Antonelliana_%28Torino%29_09.jpg",
+          "wikibaseItem": "Q201902",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "安托内利尖塔",
+          "extract": "安托内利尖塔 是意大利城市都灵主要的地标，以建造此塔的建筑师亚历山德罗·安托内利命名。工程开始于1863年，完成于26年后的1889年，此时安托内利已经去世。目前塔内设有国家电影博物馆，也是世界最高的博物馆。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E5%AE%89%E6%89%98%E5%86%85%E5%88%A9%E5%B0%96%E5%A1%94",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/MoleAntonelliana2011.JPG/330px-MoleAntonelliana2011.JPG",
+          "wikibaseItem": "Q201902",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 16.7,
+        "weatherCode": 3,
+        "windKph": 6.6,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "san_vitale_ravenna",
+      "wikidataId": "Q721817",
+      "name": {
+        "en": "Basilica of San Vitale",
+        "zh": "聖維塔堂"
+      },
+      "coordinates": {
+        "lon": 12.196388888,
+        "lat": 44.420555555
+      },
+      "wikidata": {
+        "label": "Basilica of San Vitale",
+        "description": "minor basilica in Ravenna, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Basilica%20of%20San%20Vitale.jpg",
+        "heritageId": "Q43113623",
+        "source": "https://www.wikidata.org/wiki/Q721817"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Basilica of San Vitale",
+          "extract": "The Basilica of San Vitale is a late antique church in Ravenna, Italy. The sixth-century church is an important surviving example of early Byzantine art and architecture, and its mosaics in particular are some of the most-studied works in Byzantine art. It is one of eight structures in Ravenna inscribed on the UNESCO World Heritage List. Its foundational inscription describes the church as a basilica, though its centrally-planned design is not typical of the basilica form. Within the Roman Catholic Church it holds the honorific title of basilica for its historic and ecclesial importance.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Basilica_of_San_Vitale",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Basilica_of_San_Vitale.jpg/330px-Basilica_of_San_Vitale.jpg",
+          "wikibaseItem": "Q721817",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "聖維塔堂",
+          "extract": "圣维塔教堂 是位于意大利城市拉文纳的一座天主教教堂，始建于527年，548年完工。因典型的拜占庭风格而闻名于世，是早期拜占庭艺术在建筑方面的代表作。教堂里保存有兩幅著名的马赛克镶嵌画，描繪了東羅馬帝國皇帝查士丁尼一世和他的文武群臣以及他的妻子皇后狄奥多拉和其宫廷。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E8%81%96%E7%B6%AD%E5%A1%94%E5%A0%82",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Basilica_of_San_Vitale%2C_Ravenna%2C_Italy.jpg/330px-Basilica_of_San_Vitale%2C_Ravenna%2C_Italy.jpg",
+          "wikibaseItem": "Q721817",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 18.3,
+        "weatherCode": 61,
+        "windKph": 1.3,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "assisi_basilica",
+      "wikidataId": "Q207486",
+      "name": {
+        "en": "Basilica of Saint Francis of Assisi",
+        "zh": "亚西西的圣方济各圣殿"
+      },
+      "coordinates": {
+        "lon": 12.60581,
+        "lat": 43.07484
+      },
+      "wikidata": {
+        "label": "Basilica of San Francesco d'Assisi",
+        "description": "church in Assisi, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/BasilicaDiSanFrancescoAssisiMar262024%2002.jpg",
+        "heritageId": "Q43113623",
+        "source": "https://www.wikidata.org/wiki/Q207486"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Basilica of Saint Francis of Assisi",
+          "extract": "The Basilica of Saint Francis of Assisi is the mother church of the Roman Catholic Order of Friars Minor Conventual in Assisi, a town in the Umbria region in central Italy, where Saint Francis was born and died. It is a papal minor basilica and one of the most important places of Christian pilgrimage in Italy. With its accompanying friary, Sacro Convento, the basilica is a distinctive landmark to those approaching Assisi. It has been a UNESCO World Heritage Site since 2000.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Basilica_of_Saint_Francis_of_Assisi",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Assisi_San_Francesco_BW_2.JPG/330px-Assisi_San_Francesco_BW_2.JPG",
+          "wikibaseItem": "Q207486",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "亚西西的圣方济各圣殿",
+          "extract": "亚西西的圣方济各圣殿 位于意大利中部小城阿西西，是亚西西的方济各安葬之地和方济各会的母堂。2000年被列为世界遗产，也是意大利重要的天主教朝圣地。这座圣殿始建于1228年，建在小山的一侧，包括上教堂和下教堂，和安放圣方济各遗体的墓穴，以及附属的修院。对于接近亚西西的人而言，亚西西的圣方济各圣殿是一个与众不同的地标。上教堂的内部是意大利早期哥特式建筑的重要实例。 \n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E4%BA%9A%E8%A5%BF%E8%A5%BF%E7%9A%84%E5%9C%A3%E6%96%B9%E6%B5%8E%E5%90%84%E5%9C%A3%E6%AE%BF",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Assisi_San_Francesco_BW_2.JPG/330px-Assisi_San_Francesco_BW_2.JPG",
+          "wikibaseItem": "Q207486",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 16.6,
+        "weatherCode": 95,
+        "windKph": 2,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "caserta_palace",
+      "wikidataId": "Q327983",
+      "name": {
+        "en": "Royal Palace of Caserta",
+        "zh": "卡塞塔王宮"
+      },
+      "coordinates": {
+        "lon": 14.325833333,
+        "lat": 41.07
+      },
+      "wikidata": {
+        "label": "Palace of Caserta",
+        "description": "former royal residence in Caserta, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Campania%20Caserta2%20tango7174.jpg",
+        "heritageId": null,
+        "source": "https://www.wikidata.org/wiki/Q327983"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Royal Palace of Caserta",
+          "extract": "The Royal Palace of Caserta is a former royal palace in Caserta, Campania, 35 kilometres (22 mi) north of Naples in southern Italy, constructed by the House of Bourbon-Two Sicilies as their main residence as Kings of Naples.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Royal_Palace_of_Caserta",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Campania_Caserta2_tango7174.jpg/330px-Campania_Caserta2_tango7174.jpg",
+          "wikibaseItem": "Q327983",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "卡塞塔王宮",
+          "extract": "卡塞塔王宮 是位於義大利南部卡塞塔，由那不勒斯王國波旁王朝所建造的的前皇家宅邸。其擁有235000平方米的占地面積和1200個房間，为世界最大的宮殿建築，也是18世紀歐洲最大的建築物之一。1997年，聯合國教育科學文化組織指定卡塞塔王宮為世界文化遺產。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E5%8D%A1%E5%A1%9E%E5%A1%94%E7%8E%8B%E5%AE%AE",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Reggia_di_Caserta%2C_prospettiva_dalla_fontana_di_Venere_e_Adone_-_panoramio.jpg/330px-Reggia_di_Caserta%2C_prospettiva_dalla_fontana_di_Venere_e_Adone_-_panoramio.jpg",
+          "wikibaseItem": "Q327983",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 22,
+        "weatherCode": 2,
+        "windKph": 21.3,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "herculaneum",
+      "wikidataId": "Q178813",
+      "name": {
+        "en": "Herculaneum",
+        "zh": "赫库兰尼姆"
+      },
+      "coordinates": {
+        "lon": 14.3475,
+        "lat": 40.806111
+      },
+      "wikidata": {
+        "label": "Herculaneum",
+        "description": "Roman town destroyed by eruption of Mount Vesuvius",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Antigua%20ciudad%20de%20Herculano%2C%20Italia%2C%202023-03-27%2C%20DD%20141.jpg",
+        "heritageId": "Q43113623",
+        "source": "https://www.wikidata.org/wiki/Q178813"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Herculaneum",
+          "extract": "Herculaneum is an ancient Roman town located in the modern-day comune of Ercolano, Campania, Italy. Herculaneum was buried under a massive pyroclastic flow in the eruption of Mount Vesuvius in 79 AD.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Herculaneum",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Antigua_ciudad_de_Herculano%2C_Italia%2C_2023-03-27%2C_DD_135-138_PAN.jpg/330px-Antigua_ciudad_de_Herculano%2C_Italia%2C_2023-03-27%2C_DD_135-138_PAN.jpg",
+          "wikibaseItem": "Q178813",
+          "source": "wikipedia"
+        },
+        "zh": null
+      },
+      "weather": {
+        "temperatureC": 21,
+        "weatherCode": 2,
+        "windKph": 19.3,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "paestum",
+      "wikidataId": "Q329967",
+      "name": {
+        "en": "Paestum",
+        "zh": "帕埃斯图姆"
+      },
+      "coordinates": {
+        "lon": 15.005569,
+        "lat": 40.422631
+      },
+      "wikidata": {
+        "label": "Paestum",
+        "description": "ancient Greek city in present-day village Paestum, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/View%20of%20Paestum%20with%20dji.jpg",
+        "heritageId": "Q43113623",
+        "source": "https://www.wikidata.org/wiki/Q329967"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Paestum",
+          "extract": "Paestum was a major ancient Greek city on the coast of the Tyrrhenian Sea, in Magna Graecia. The ruins of Paestum are famous for their three ancient Greek temples in the Doric order dating from about 550 to 450 BCE that are in an excellent state of preservation. The city walls and amphitheatre are largely intact, and the bottom of the walls of many other structures remain, as well as paved roads. The site is open to the public, and there is a modern national museum within it, which also contains the finds from the associated Greek site of Foce del Sele.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Paestum",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Veduta_di_Paestum_2010.jpg/330px-Veduta_di_Paestum_2010.jpg",
+          "wikibaseItem": "Q329967",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "帕埃斯图姆",
+          "extract": "帕埃斯图姆（Paestum）是意大利坎帕尼亚地区的城镇。它位于奇伦托地区北部，那不勒斯东南方85公里萨莱诺省靠近海岸的地方，以古希臘建築多立克柱式神廟而聞名。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E5%B8%95%E5%9F%83%E6%96%AF%E5%9B%BE%E5%A7%86",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Veduta_di_Paestum_2010.jpg/330px-Veduta_di_Paestum_2010.jpg",
+          "wikibaseItem": "Q329967",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 21.9,
+        "weatherCode": 3,
+        "windKph": 19.4,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "matera_sassi",
+      "wikidataId": "Q2350404",
+      "name": {
+        "en": "Sassi di Matera",
+        "zh": "马泰拉洞窟民居"
+      },
+      "coordinates": {
+        "lon": 16.6083,
+        "lat": 40.6667
+      },
+      "wikidata": {
+        "label": "Sassi di Matera",
+        "description": "human settlement in Matera, Province of Matera, Basilicata, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Matera%20boenisch%20nov%202005.jpg",
+        "heritageId": null,
+        "source": "https://www.wikidata.org/wiki/Q2350404"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Sassi di Matera",
+          "extract": "The Sassi di Matera are two districts of the Italian city of Matera, Basilicata, well-known for their ancient cave dwellings inhabited since the Paleolithic period.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Sassi_di_Matera",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Matera_boenisch_nov_2005.jpg/330px-Matera_boenisch_nov_2005.jpg",
+          "wikibaseItem": "Q2350404",
+          "source": "wikipedia"
+        },
+        "zh": null
+      },
+      "weather": {
+        "temperatureC": 19.6,
+        "weatherCode": 3,
+        "windKph": 18.8,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "alberobello_trulli",
+      "wikidataId": "Q51812",
+      "name": {
+        "en": "Alberobello",
+        "zh": "阿尔贝罗贝洛"
+      },
+      "coordinates": {
+        "lon": 17.237461111,
+        "lat": 40.784061111
+      },
+      "wikidata": {
+        "label": "Alberobello",
+        "description": "Italian comune",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Alberobello%20BW%202016-10-16%2013-10-43.jpg",
+        "heritageId": null,
+        "source": "https://www.wikidata.org/wiki/Q51812"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Alberobello",
+          "extract": "Alberobello is a small town and comune of the Metropolitan City of Bari, Apulia, southern Italy. It has 10,237 inhabitants (2022) and is famous for its unique trullo buildings. The trulli of Alberobello have been designated as a UNESCO World Heritage Site since 1996. Alberobello is one of I Borghi più belli d'Italia.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Alberobello",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Alberobello_-_View_from_Piazza_Giangirolamo_II_-_03.jpg/330px-Alberobello_-_View_from_Piazza_Giangirolamo_II_-_03.jpg",
+          "wikibaseItem": "Q51812",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "阿尔贝罗贝洛",
+          "extract": "阿尔贝罗贝洛 是意大利普利亚大区巴里廣域市的一個市镇，有人口約一萬一千人。城內的特鲁洛 建築世界知名，1996年被联合国教科文组织列为世界文化遗产\n。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E9%98%BF%E5%B0%94%E8%B4%9D%E7%BD%97%E8%B4%9D%E6%B4%9B",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Alberobello_BW_2016-10-16_13-10-43.jpg/330px-Alberobello_BW_2016-10-16_13-10-43.jpg",
+          "wikibaseItem": "Q51812",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 20.3,
+        "weatherCode": 3,
+        "windKph": 17.9,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "castel_del_monte",
+      "wikidataId": "Q215897",
+      "name": {
+        "en": "Castel del Monte, Apulia",
+        "zh": "蒙特城堡"
+      },
+      "coordinates": {
+        "lon": 16.2709346,
+        "lat": 41.0847535
+      },
+      "wikidata": {
+        "label": "Castel del Monte",
+        "description": "medieval castle in Andria, Apulia, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Castel%20del%20Monte%20BW%202016-10-14%2012-26-11%20r.jpg",
+        "heritageId": "Q26971668",
+        "source": "https://www.wikidata.org/wiki/Q215897"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Castel del Monte, Apulia",
+          "extract": "Castel del Monte is a 13th-century citadel and castle situated on a hill in Andria in the Apulia region of southeast Italy. It was built during the 1240s by King Frederick II, who had inherited the lands from his mother Constance of Sicily. In the 18th century, the castle's interior marbles and remaining furnishings were removed. It has neither a moat nor a drawbridge and some considered it never to have been intended as a defensive fortress. However, archaeological work has suggested that it originally had a curtain wall.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Castel_del_Monte%2C_Apulia",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Castel_del_Monte_-_Andria.jpg/330px-Castel_del_Monte_-_Andria.jpg",
+          "wikibaseItem": "Q215897",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "蒙特城堡",
+          "extract": "蒙特城堡 位于意大利东南部的普利亚大区，是一座八边形的城堡，由神圣罗马帝国皇帝腓特烈二世建于1229年到1249年左右。1996年被联合国教科文组织登录为世界遗产。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E8%92%99%E7%89%B9%E5%9F%8E%E5%A0%A1",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Castel_del_monte%2C_esterno_01.jpg/330px-Castel_del_monte%2C_esterno_01.jpg",
+          "wikibaseItem": "Q215897",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 19.8,
+        "weatherCode": 80,
+        "windKph": 20.4,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "amalfi_coast",
+      "wikidataId": "Q212214",
+      "name": {
+        "en": "Amalfi Coast",
+        "zh": "阿马尔菲海岸"
+      },
+      "coordinates": {
+        "lon": 14.6,
+        "lat": 40.633333333
+      },
+      "wikidata": {
+        "label": "Amalfi Coast",
+        "description": "coastal area in the Campania region, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Ravello%20September%202007.jpg",
+        "heritageId": "Q9259",
+        "source": "https://www.wikidata.org/wiki/Q212214"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Amalfi Coast",
+          "extract": "The Amalfi Coast is a stretch of coastline in southern Italy overlooking the Tyrrhenian Sea and the Gulf of Salerno, in Campania. It is located south of the Sorrentine Peninsula and north of the Cilentan Coast.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Amalfi_Coast",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Amalfi_Coast_%28Italy%2C_October_2020%29_-_75_%2850558355441%29.jpg/330px-Amalfi_Coast_%28Italy%2C_October_2020%29_-_75_%2850558355441%29.jpg",
+          "wikibaseItem": "Q212214",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "阿马尔菲海岸",
+          "extract": "阿马尔菲海岸 是意大利南部萨莱诺省索伦托半岛南侧的一段海岸线，西面到波西塔诺，东面到海上薩雷諾。沿着阿马尔菲海岸的城镇有薩雷諾、滨海维耶特里、切塔拉、马奥莱、米诺利、拉韦洛、斯卡拉、阿特拉尼、阿马尔菲、孔卡代马里尼、富羅雷、普莱亚诺和波西塔诺。 \n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E9%98%BF%E9%A9%AC%E5%B0%94%E8%8F%B2%E6%B5%B7%E5%B2%B8",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Amalfi_Coast_%28247891371%29.jpeg/330px-Amalfi_Coast_%28247891371%29.jpeg",
+          "wikibaseItem": "Q212214",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 20.4,
+        "weatherCode": 2,
+        "windKph": 10.6,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "valley_of_temples",
+      "wikidataId": "Q636774",
+      "name": {
+        "en": "Valle dei Templi",
+        "zh": "神殿之谷"
+      },
+      "coordinates": {
+        "lon": 13.59,
+        "lat": 37.28972222
+      },
+      "wikidata": {
+        "label": "Valle dei Templi",
+        "description": "archaeological site in Sicily, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Agrigento%20TemplesValley%200066.jpg",
+        "heritageId": "Q26971668",
+        "source": "https://www.wikidata.org/wiki/Q636774"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Valle dei Templi",
+          "extract": "The Valle dei Templi, or Valley of the Temples, is an archaeological site in Agrigento, Sicily. It is one of the most outstanding examples of ancient Greek art and architecture of Magna Graecia, and is one of the main attractions of Sicily. The term \"valley\" is a misnomer, the site being located on a ridge outside the town of Agrigento.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Valle_dei_Templi",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Concordiatempel_Tempio_della_Temple_of_Concordia_de_la_Concorde_Tal_der_Tempel_Valle_dei_Templi_Agrigento_Sizilien_Foto_Wolfgang_Pehlemann_DSC07490.jpg/330px-Concordiatempel_Tempio_della_Temple_of_Concordia_de_la_Concorde_Tal_der_Tempel_Valle_dei_Templi_Agrigento_Sizilien_Foto_Wolfgang_Pehlemann_DSC07490.jpg",
+          "wikibaseItem": "Q636774",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "神殿之谷",
+          "extract": "神殿之谷 是意大利西西里大区阿格里真托市南面一座拥有古希腊神殿遗迹的山丘。阿格里真托的神殿之谷是希腊境外保存最完好的古希腊神庙群。1997年神殿之谷以“阿格里真托考古区”的名义被联合国教科文组织列入《世界遗产目录》。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E7%A5%9E%E6%AE%BF%E4%B9%8B%E8%B0%B7",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Temple_of_Concordia%2C_Agrigento_BW_2012-10-07_13-09-13.jpg/330px-Temple_of_Concordia%2C_Agrigento_BW_2012-10-07_13-09-13.jpg",
+          "wikibaseItem": "Q636774",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 22.2,
+        "weatherCode": 1,
+        "windKph": 20,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "mount_etna",
+      "wikidataId": "Q16990",
+      "name": {
+        "en": "Mount Etna",
+        "zh": "埃特纳火山"
+      },
+      "coordinates": {
+        "lon": 14.993220288,
+        "lat": 37.750834514
+      },
+      "wikidata": {
+        "label": "Mount Etna",
+        "description": "active stratovolcano on the east coast of Sicily, Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/View%20of%20Mount%20Etna%20from%20Reggio%20Calabria%20-%20Italy%20-%2010%20Feb.%202017%20-%20%281%29.jpg",
+        "heritageId": null,
+        "source": "https://www.wikidata.org/wiki/Q16990"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Mount Etna",
+          "extract": "Mount Etna, or simply Etna, is an active stratovolcano on the east coast of Sicily, Italy, in the Metropolitan City of Catania, between the cities of Messina and Catania. It is located above the convergent plate margin between the African Plate and the Eurasian Plate. It is one of the tallest active volcanoes in Europe, and the tallest peak in Italy south of the Alps with a current height of 3,403 m (11,165 ft), though this varies with summit eruptions. For instance, in 2021 the southeastern crater reached a height of 3,357 m (11,014 ft), but was then surpassed by the Voragine crater after the summer 2024 eruptions.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Mount_Etna",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Mt_Etna_and_Catania1.jpg/330px-Mt_Etna_and_Catania1.jpg",
+          "wikibaseItem": "Q16990",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "埃特纳火山",
+          "extract": "埃特纳火山，是位于意大利西西里岛东海岸的墨西拿和卡塔尼亚之间的活火山，屬层状火山。它是欧洲最高的活火山，海拔3,403米（截至2024年9月），其高度隨噴發活動而變化。埃特納火山下部為一個巨大的盾形火山，上部為高約300米的火山渣錐，面積約1,190平方公里，底部周長約140公里。由於埃特納火山處於亞歐板塊和非洲板塊交匯處，一直活動頻繁，為世界上爆發次數最多的火山之一。國際火山學與地球內部化學協會（IAVCEI）將這座火山列為十年火山。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E5%9F%83%E7%89%B9%E7%BA%B3%E7%81%AB%E5%B1%B1",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Mt_Etna_and_Catania1.jpg/330px-Mt_Etna_and_Catania1.jpg",
+          "wikibaseItem": "Q16990",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 6.4,
+        "weatherCode": 2,
+        "windKph": 6.2,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "palermo_cathedral",
+      "wikidataId": "Q1478407",
+      "name": {
+        "en": "Palermo Cathedral",
+        "zh": "巴勒莫主教座堂"
+      },
+      "coordinates": {
+        "lon": 13.356111,
+        "lat": 38.114444
+      },
+      "wikidata": {
+        "label": "Palermo Cathedral",
+        "description": "cathedral in Italy",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Palermo%20Cathedral%20BW%202025-04-29%2011-57-44.jpg",
+        "heritageId": "Q43113623",
+        "source": "https://www.wikidata.org/wiki/Q1478407"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Palermo Cathedral",
+          "extract": "Palermo Cathedral is the cathedral church of the Roman Catholic Archdiocese of Palermo, located in Palermo, Sicily, southern Italy. It is dedicated to the Assumption of the Virgin Mary. As an architectural complex, it is characterized by the presence of different styles, due to a long history of additions, alterations and restorations, the last of which occurred in the 18th century.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Palermo_Cathedral",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Palermo_Cathedral_Facade.jpg/330px-Palermo_Cathedral_Facade.jpg",
+          "wikibaseItem": "Q1478407",
+          "source": "wikipedia"
+        },
+        "zh": {
+          "title": "巴勒莫主教座堂",
+          "extract": "巴勒莫主教座堂是意大利西西里首府巴勒莫的一组宗教建筑群。它的特点是不同历史时期的不同风格叠加在同一座建筑上，\n主教座堂位于埃马努埃莱街 和博内洛街 的街角。\n",
+          "pageUrl": "https://zh.wikipedia.org/wiki/%E5%B7%B4%E5%8B%92%E8%8E%AB%E4%B8%BB%E6%95%99%E5%BA%A7%E5%A0%82",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Palerme_Cath%C3%A9drale.jpg/330px-Palerme_Cath%C3%A9drale.jpg",
+          "wikibaseItem": "Q1478407",
+          "source": "wikipedia"
+        }
+      },
+      "weather": {
+        "temperatureC": 26.2,
+        "weatherCode": 1,
+        "windKph": 3.3,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    },
+    {
+      "id": "nuraghe_su_nuraxi",
+      "wikidataId": "Q253241",
+      "name": {
+        "en": "Su Nuraxi (Barumini)",
+        "zh": "巴鲁米尼的努拉吉"
+      },
+      "coordinates": {
+        "lon": 8.9998843,
+        "lat": 39.7028565
+      },
+      "wikidata": {
+        "label": "Su Nuraxi di Barumini",
+        "description": "nuraghe",
+        "image": "http://commons.wikimedia.org/wiki/Special:FilePath/Central%20tower%20of%20the%20Nuraghe%20at%20Saint%20Antine%20of%20Torralba.jpg",
+        "heritageId": "Q26971668",
+        "source": "https://www.wikidata.org/wiki/Q253241"
+      },
+      "wikipedia": {
+        "en": {
+          "title": "Su Nuraxi (Barumini)",
+          "extract": "Su Nuraxi is a Nuragic archaeological site in Barumini, Sardinia, Italy. Su Nuraxi simply means \"The Nuraghe\" in Campidanese, the southern variant of the Sardinian language.",
+          "pageUrl": "https://en.wikipedia.org/wiki/Su_Nuraxi_(Barumini)",
+          "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Nuraghe_Su_Nuraxi_-_Barumini_-_Sardinia_-_Italy_-_30.jpg/330px-Nuraghe_Su_Nuraxi_-_Barumini_-_Sardinia_-_Italy_-_30.jpg",
+          "wikibaseItem": "Q253241",
+          "source": "wikipedia"
+        },
+        "zh": null
+      },
+      "weather": {
+        "temperatureC": 19.3,
+        "weatherCode": 2,
+        "windKph": 24.7,
+        "observedAt": "2026-05-10T16:45",
+        "source": "open-meteo"
+      }
+    }
+  ],
+  "route": {
+    "distanceKm": 8257.2,
+    "durationHours": 108.92,
+    "source": "osrm"
+  }
+}

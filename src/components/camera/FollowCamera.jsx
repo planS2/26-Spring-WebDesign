@@ -33,10 +33,6 @@ export function FollowCamera({ targetRef }) {
   const selectedLandmarkId = useAppStore((state) => state.selectedLandmarkId);
   const controlsRef = useRef(null);
   const lastModeRef = useRef(cameraMode);
-  const vehicleSpeed = useAppStore((state) => state.vehicleSpeed);
-  const controlsRef = useRef(null);
-  const lastModeRef = useRef(cameraMode);
-  const followInitializedRef = useRef(false);
 
   useFrame((_, delta) => {
     if (!targetRef.current) return;
@@ -48,6 +44,18 @@ export function FollowCamera({ targetRef }) {
 
     if (cameraMode === 'free') {
       followInitializedRef.current = false;
+      // 自由视角只在刚切换时把 OrbitControls 目标放到小车附近，之后不再强制跟随。
+      if (lastModeRef.current !== 'free' && controlsRef.current) {
+        controlsRef.current.target.copy(targetWorldPosition);
+        controlsRef.current.update();
+      }
+      lastModeRef.current = cameraMode;
+      return;
+    }
+
+    lastModeRef.current = cameraMode;
+
+    if (cameraMode === 'free') {
       // 自由视角只在刚切换时把 OrbitControls 目标放到小车附近，之后不再强制跟随。
       if (lastModeRef.current !== 'free' && controlsRef.current) {
         controlsRef.current.target.copy(targetWorldPosition);
