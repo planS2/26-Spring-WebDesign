@@ -388,6 +388,11 @@ export function UIOverlay({ isStarted, onClose }) {
   }, [routeLocked]);
 
   useEffect(() => {
+    document.body.classList.toggle('poi-briefing-visible', showPoiBriefing);
+    return () => document.body.classList.remove('poi-briefing-visible');
+  }, [showPoiBriefing]);
+
+  useEffect(() => {
     if (!selectedLandmarkId || !nearbyLandmarkId || selectedLandmarkId === nearbyLandmarkId) return;
     if (focusPanelOpen || modelViewerOpen) return;
     clearLandmark();
@@ -549,6 +554,7 @@ export function UIOverlay({ isStarted, onClose }) {
 
       <div className="hud-hints is-visible">
         <span className="hud-key"><kbd>W</kbd><kbd>S</kbd> {locale.ui.cruise}</span>
+        <span className="hud-key hud-key--boost"><kbd>Shift</kbd> {language === 'zh' ? '加速' : 'Boost'}</span>
         <span className="hud-key"><kbd>R</kbd> {locale.ui.auto}</span>
         <span className="hud-key"><kbd>V</kbd> {locale.ui.view}</span>
         <span className="hud-key"><kbd>F</kbd> {locale.ui.explore}</span>
@@ -584,7 +590,7 @@ export function UIOverlay({ isStarted, onClose }) {
         <span className="interact-prompt__text">{nearbyLandmarkId ? locale.ui.openSideBriefing : locale.ui.cruiseAndDiscover}</span>
       </div>
 
-      <aside className={`poi-side poi-side--left ${displayLandmark && !focusPanelOpen && cameraMode !== 'map' ? 'is-visible' : ''}`} aria-live="polite">
+      <aside className={`poi-side poi-side--left ${showPoiBriefing ? 'is-visible' : ''}`} aria-live="polite">
         <div className="poi-side__panel">
           <p className="poi-side__eyebrow">{locale.ui.routeBriefing}</p>
           <h2 className="poi-side__title">{getLandmarkName(displayLandmark, language) || 'Landmark'}</h2>
@@ -616,10 +622,10 @@ export function UIOverlay({ isStarted, onClose }) {
             {isLoading && <p className="focus-review-empty">{locale.ui.loadingReviews}</p>}
             {!isLoading && comments.length === 0 && <p className="focus-review-empty">{locale.ui.noReviews}</p>}
             {comments.map((comment) => (
-              <article key={`${comment.author}-${comment.score}`} className="focus-review-card">
+              <article key={comment.id ?? `${comment.author}-${comment.source}`} className="focus-review-card">
                 <div className="focus-review-card__meta">
                   <span>{comment.author}</span>
-                  <span>{comment.score}</span>
+                  {comment.score != null && <span>{comment.score}</span>}
                 </div>
                 <p className="focus-review-card__body">{comment.comment}</p>
                 <p className="focus-review-card__source">{comment.source}</p>

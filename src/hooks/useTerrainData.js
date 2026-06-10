@@ -9,11 +9,14 @@ export function useTerrainData() {
   useEffect(() => {
     const unsubscribe = subscribeTerrain(setTerrain);
     loadTerrainData();
-    return unsubscribe;
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
-    setTerrainRouteCorridor(activeRoute.curve.getPoints(activeRoute.source === 'osrm' ? 240 : 120));
+    setTerrainRouteCorridor(activeRoute.curve.getPoints(activeRoute.source === 'routed' ? 240 : 120));
   }, [activeRoute]);
 
   return terrain;

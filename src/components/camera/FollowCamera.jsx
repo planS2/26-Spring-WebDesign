@@ -2,7 +2,7 @@ import { OrbitControls } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useRef } from 'react';
 import { useAppStore } from '../../state/useAppStore.js';
-import { landmarks } from '../../data/landmarks.js';
+import { landmarks, worldUnitsFromMeters } from '../../data/landmarks.js';
 import * as THREE from 'three';
 
 const followOffset = new THREE.Vector3(0, 3.2, -7.8);
@@ -11,9 +11,21 @@ const tempOffset = new THREE.Vector3();
 const tempLook = new THREE.Vector3();
 const mapTarget = new THREE.Vector3(0, 82, 18);
 const mapLookAt = new THREE.Vector3(0, 0, 2);
+// Satellite-like framing: scene units are used intentionally because a
+// literal real-world chase distance is invisible on a country-scale map.
+const followOffset = new THREE.Vector3(0, 0.07, -0.15);
+const lookOffset = new THREE.Vector3(0, 0, 0.045);
+const tempOffset = new THREE.Vector3();
+const tempLook = new THREE.Vector3();
+const mapTarget = new THREE.Vector3(0, 175, 145);
+const mapLookAt = new THREE.Vector3(0, 0, 0);
 const targetWorldPosition = new THREE.Vector3();
 const targetWorldQuaternion = new THREE.Quaternion();
+const targetYawQuaternion = new THREE.Quaternion();
+const targetEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+const upAxis = new THREE.Vector3(0, 1, 0);
 const cameraTarget = new THREE.Vector3();
+const smoothedLookTarget = new THREE.Vector3();
 
 export function FollowCamera({ targetRef }) {
   const camera = useThree((state) => state.camera);
@@ -22,11 +34,38 @@ export function FollowCamera({ targetRef }) {
   const controlsRef = useRef(null);
   const lastModeRef = useRef(cameraMode);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (!targetRef.current) return;
 
     targetRef.current.getWorldPosition(targetWorldPosition);
     targetRef.current.getWorldQuaternion(targetWorldQuaternion);
+    targetEuler.setFromQuaternion(targetWorldQuaternion, 'YXZ');
+    targetYawQuaternion.setFromAxisAngle(upAxis, targetEuler.y);
+
+    if (cameraMode === 'free') {
+      followInitializedRef.current = false;
+      // 自由视角只在刚切换时把 OrbitControls 目标放到小车附近，之后不再强制跟随。
+      if (lastModeRef.current !== 'free' && controlsRef.current) {
+        controlsRef.current.target.copy(targetWorldPosition);
+        controlsRef.current.update();
+      }
+      lastModeRef.current = cameraMode;
+      return;
+    }
+
+    lastModeRef.current = cameraMode;
+
+    if (cameraMode === 'free') {
+      // 自由视角只在刚切换时把 OrbitControls 目标放到小车附近，之后不再强制跟随。
+      if (lastModeRef.current !== 'free' && controlsRef.current) {
+        controlsRef.current.target.copy(targetWorldPosition);
+        controlsRef.current.update();
+      }
+      lastModeRef.current = cameraMode;
+      return;
+    }
+
+    lastModeRef.current = cameraMode;
 
     if (cameraMode === 'free') {
       // 自由视角只在刚切换时把 OrbitControls 目标放到小车附近，之后不再强制跟随。
@@ -41,12 +80,14 @@ export function FollowCamera({ targetRef }) {
     lastModeRef.current = cameraMode;
 
     if (cameraMode === 'map') {
+      followInitializedRef.current = false;
       camera.position.lerp(mapTarget, 0.045);
       camera.lookAt(mapLookAt);
       return;
     }
 
     if (cameraMode === 'focus' && selectedLandmarkId) {
+      followInitializedRef.current = false;
       const landmark = landmarks.find((item) => item.id === selectedLandmarkId);
       if (landmark) {
         const focusPos = new THREE.Vector3(landmark.position[0] + 8, 8.5, landmark.position[2] + 8);

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Patrick+Hand&display=swap');
+
 .showcase-home {
   --concept-ink: #102032;
   --concept-muted: #647586;
@@ -26,6 +28,13 @@
     radial-gradient(980px 680px at 54% 28%, color-mix(in srgb, var(--concept-accent) 18%, transparent), transparent 68%),
     radial-gradient(760px 520px at 14% 72%, rgba(206, 232, 246, 0.54), transparent 70%),
     linear-gradient(135deg, #fbfdff 0%, #eef7fb 48%, #fff7ef 100%);
+}
+
+.showcase-home--story {
+  min-height: 100vh;
+  padding: 0;
+  overflow: visible;
+  background: #fdfbf7;
 }
 
 .showcase-home--radial {
@@ -99,12 +108,14 @@
   z-index: 1;
   width: 100vw;
   min-height: 400vh;
-  margin: 10px calc(50% - 50vw) 36px;
+  margin: 0 calc(50% - 50vw);
   border-radius: 0;
-  background:
-    radial-gradient(920px 620px at 74% 40%, rgba(95, 184, 226, 0.22), transparent 68%),
-    radial-gradient(820px 540px at 18% 56%, rgba(255, 229, 204, 0.36), transparent 72%),
-    linear-gradient(135deg, rgba(255,255,255,0.68), rgba(239,248,252,0.22));
+  background-color: #fdfbf7;
+  background-image:
+    radial-gradient(#e5e0d8 1px, transparent 1.4px),
+    linear-gradient(90deg, rgba(45, 93, 161, 0.07) 1px, transparent 1px),
+    linear-gradient(#f3eee5 1px, transparent 1px);
+  background-size: 24px 24px, 100% 34px, 100% 34px;
   overflow: clip;
 }
 
@@ -115,12 +126,16 @@
   z-index: 1;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   min-height: 100vh;
   opacity: 0;
   pointer-events: none;
+  overflow: hidden;
+  background-color: #fdfbf7;
   background:
-    radial-gradient(760px 460px at 70% 46%, rgba(71, 160, 204, 0.18), transparent 70%),
-    radial-gradient(620px 360px at 36% 52%, rgba(255,255,255,0.5), transparent 74%);
+    radial-gradient(760px 460px at 70% 46%, rgba(255, 249, 196, 0.52), transparent 70%),
+    radial-gradient(620px 360px at 36% 52%, rgba(255, 255, 255, 0.58), transparent 74%),
+    #fdfbf7;
 }
 
 .semantic-story__loader {
@@ -155,7 +170,7 @@
   inset: 0;
   border-radius: 50%;
   background-image:
-    radial-gradient(circle, rgba(31, 118, 158, 0.2) 1px, transparent 1.8px);
+    radial-gradient(circle, rgba(45, 45, 45, 0.16) 1px, transparent 1.8px);
   background-size: 24px 24px;
   opacity: 0.16;
   mask-image: linear-gradient(90deg, rgba(0,0,0,0.8), rgba(0,0,0,1) 42%, rgba(0,0,0,0.72));
@@ -198,11 +213,11 @@
 .semantic-story__panel h2 {
   max-width: 13ch;
   margin: 0;
-  color: #234656;
-  font-family: "Georgia", "Times New Roman", serif;
+  color: #2d2d2d;
+  font-family: "Kalam", "Noto Serif SC", cursive;
   font-size: clamp(42px, 6.2vw, 96px);
-  font-style: italic;
-  font-weight: 400;
+  font-style: normal;
+  font-weight: 700;
   line-height: 0.96;
   letter-spacing: 0;
   text-wrap: balance;
@@ -217,22 +232,24 @@
   min-height: 42px;
   margin-top: 24px;
   padding: 0 18px 5px;
-  border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--concept-ink) 62%, transparent);
-  border-radius: 0;
-  background: transparent;
-  color: color-mix(in srgb, var(--concept-ink) 82%, #0b77a5);
-  font: 750 15px/1 var(--font-ui, system-ui);
-  letter-spacing: 0.28em;
-  text-transform: lowercase;
+  border: 3px solid #2d2d2d;
+  border-radius: 255px 20px 225px 18px / 18px 225px 20px 255px;
+  background: #fff9c4;
+  color: #2d2d2d;
+  font: 400 20px/1 "Patrick Hand", "Noto Sans SC", cursive;
+  letter-spacing: 0;
+  text-transform: none;
   cursor: pointer;
-  box-shadow: none;
+  box-shadow: 4px 4px 0 #2d2d2d;
   pointer-events: auto;
 }
 
 .semantic-story__enter:hover {
-  color: #0b77a5;
-  border-color: #0b77a5;
+  color: #fff;
+  border-color: #2d2d2d;
+  background: #ff4d4d;
+  box-shadow: 2px 2px 0 #2d2d2d;
+  transform: translate(2px, 2px);
 }
 
 .semantic-story__rail {

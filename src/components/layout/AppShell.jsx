@@ -60,8 +60,9 @@ export function AppShell({ children, isStarted, onStart, onClose }) {
   return (
     <div className="drive-overlay" role="dialog" aria-modal="true" aria-label="Italy Drive explorer">
       <div className={`app-shell ${language === 'zh' ? 'is-zh' : 'is-en'}`}>
-        <button className="drive-overlay__close" type="button" onClick={onClose}>
-          {copy.close}
+        <button className="drive-overlay__close" type="button" onClick={onClose} aria-label={language === 'zh' ? '返回首页' : copy.close}>
+          <span aria-hidden="true">←</span>
+          {language === 'zh' ? '返回首页' : copy.close}
         </button>
         <div className="app-shell__glow app-shell__glow--left" aria-hidden="true" />
         <div className="app-shell__glow app-shell__glow--right" aria-hidden="true" />

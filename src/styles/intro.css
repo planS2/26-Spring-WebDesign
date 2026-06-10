@@ -460,3 +460,139 @@
 }
 
 /* (intentionally left blank) */
+
+/* Hand-drawn opening card */
+.intro-screen {
+  background-color: var(--sketch-paper);
+  background-image:
+    radial-gradient(rgba(45, 45, 45, 0.14) 1px, transparent 1px),
+    linear-gradient(rgba(45, 93, 161, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px, 100% 32px;
+}
+
+.intro-screen::before {
+  background:
+    radial-gradient(circle at 76% 22%, rgba(255, 77, 77, 0.12), transparent 26%),
+    linear-gradient(180deg, rgba(253, 251, 247, 0.9), rgba(253, 251, 247, 0.72));
+}
+
+.intro-screen::after {
+  opacity: 0;
+}
+
+.intro-card {
+  max-width: 610px;
+  padding: 34px 40px 30px;
+  border: 4px solid var(--sketch-ink);
+  border-radius: 255px 24px 225px 30px / 30px 225px 24px 255px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 8px 8px 0 var(--sketch-ink);
+  transform: rotate(-0.7deg);
+}
+
+.intro-card::before {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  width: 112px;
+  height: 26px;
+  background: rgba(229, 224, 216, 0.88);
+  transform: translateX(-50%) rotate(2deg);
+}
+
+.intro-eyebrow,
+.intro-subtitle,
+.intro-progress-label,
+.intro-hint {
+  font-family: var(--font-sketch);
+}
+
+.intro-eyebrow {
+  margin-bottom: 14px;
+  color: var(--sketch-red);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: none;
+}
+
+.intro-title,
+.app-shell.is-zh .intro-title {
+  margin-bottom: 18px;
+  color: var(--sketch-ink);
+  font-family: var(--font-sketch-title);
+  font-size: clamp(54px, 8vw, 92px);
+  font-weight: 700;
+  line-height: 0.92;
+}
+
+.intro-title span {
+  color: var(--sketch-blue);
+}
+
+.intro-subtitle {
+  margin-bottom: 26px;
+  color: var(--sketch-ink);
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.intro-progress-wrap {
+  align-items: flex-start;
+}
+
+.intro-progress-track {
+  width: min(320px, 100%);
+  height: 10px;
+  border: 2px solid var(--sketch-ink);
+  border-radius: 255px 18px 225px 14px / 14px 225px 18px 255px;
+  background: #fff;
+}
+
+.intro-progress-bar {
+  background: var(--sketch-red);
+}
+
+.intro-start-btn {
+  min-height: 48px;
+  padding: 10px 24px;
+  border: 3px solid var(--sketch-ink);
+  border-radius: 255px 18px 225px 14px / 14px 225px 18px 255px;
+  background: #fff;
+  box-shadow: 4px 4px 0 var(--sketch-ink);
+  color: var(--sketch-ink);
+  font: 700 20px/1 var(--font-sketch);
+  letter-spacing: 0;
+  text-transform: none;
+  transition: transform 100ms ease, box-shadow 100ms ease, background 100ms ease, color 100ms ease;
+}
+
+.intro-start-btn:hover {
+  transform: translate(2px, 2px) rotate(1deg);
+  box-shadow: 2px 2px 0 var(--sketch-ink);
+  background: var(--sketch-red);
+  color: #fff;
+}
+
+.intro-atlas__route {
+  border: 3px dashed var(--sketch-blue);
+}
+
+.intro-atlas__point {
+  background: var(--sketch-red);
+  box-shadow: 0 0 0 6px rgba(255, 77, 77, 0.14);
+}
+
+.intro-road {
+  border-top: 3px dashed rgba(45, 45, 45, 0.45);
+  border-bottom: 0;
+  background: transparent;
+}
+
+@media (max-width: 780px) {
+  .intro-card {
+    margin-inline: 18px;
+    padding: 28px 24px 24px;
+  }
+}

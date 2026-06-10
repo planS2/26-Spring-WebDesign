@@ -19,6 +19,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 backend/account_store.json
+backend/accounts.sqlite3
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -27,6 +28,7 @@ backend/account_store.json
 .env
 .env.*
 !.env.example
+!.env.backend.example
 
 # Editor directories and files
 .vscode/*

@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import http from 'node:http';
 import https from 'node:https';
 import net from 'node:net';
@@ -8,6 +8,17 @@ import tls from 'node:tls';
 const ROOT = process.cwd();
 const OUT_FILE = path.join(ROOT, 'public', 'data', 'live-landmarks.json');
 const USER_AGENT = 'web3d-project-live-data/1.0 (local development)';
+const TARGET_LANDMARK_COUNT = 100;
+const EXCLUDED_WIKIDATA_IDS = new Set([
+  'Q43032',   // Bellano municipality
+  'Q72356',   // Poggiomarino municipality
+  'Q39092',   // Piantedo municipality
+  'Q42790',   // Ballabio municipality
+  'Q190542',  // Costa Concordia shipwreck
+  'Q40183',   // Novate Mezzola municipality
+  'Q40660',   // Dubino municipality
+  'Q47416',   // Sorico municipality
+]);
 
 const LANDMARKS = [
   {
@@ -26,7 +37,7 @@ const LANDMARKS = [
   },
   {
     id: 'florence_duomo',
-    wikidataId: 'Q207528',
+    wikidataId: 'Q191739',
     wiki: { en: 'Florence Cathedral', zh: '\u4f5b\u7f57\u4f26\u8428\u4e3b\u6559\u5ea7\u5802' },
     lat: 43.7731,
     lon: 11.2558,
@@ -77,6 +88,18 @@ const LANDMARKS = [
   { id: 'palermo_cathedral', wiki: { en: 'Palermo Cathedral', zh: '\u5df4\u52d2\u83ab\u4e3b\u6559\u5ea7\u5802' }, lat: 38.1144, lon: 13.3564 },
   { id: 'nuraghe_su_nuraxi', wiki: { en: 'Su Nuraxi di Barumini', zh: '\u5df4\u9c81\u7c73\u5c3c\u7684\u52aa\u62c9\u5409' }, lat: 39.7056, lon: 8.9918 },
 ];
+
+const DISCOVERY_ROOT_KINDS = {
+  Q570116: 'monument',
+  Q33506: 'museum',
+  Q16970: 'cathedral',
+  Q23413: 'castle',
+  Q839954: 'ruins',
+  Q4989906: 'monument',
+  Q16560: 'palace',
+  Q8502: 'mountain',
+  Q23397: 'lake',
+};
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -240,43 +263,135 @@ async function fetchWikipediaSummary(title, language) {
   };
 }
 
-function fallbackWikipediaSummary(title, language) {
-  const base = wikiBase(language);
-  return {
-    title,
-    extract: '',
-    pageUrl: `${base}/wiki/${encodeURIComponent(title)}`,
-    thumbnail: null,
-    wikibaseItem: null,
-    source: 'wikipedia',
-  };
-}
-
 async function fetchWikidataRows(ids) {
   const safeIds = ids.filter(Boolean);
   if (safeIds.length === 0) return [];
   const values = safeIds.map((id) => `wd:${id}`).join(' ');
   const query = `
-SELECT ?item ?itemLabel ?itemDescription ?coord ?image ?heritageId WHERE {
+PREFIX schema: <http://schema.org/>
+SELECT ?item ?itemLabel ?itemDescription ?coord ?image ?heritageId ?officialWebsite ?openDays ?inception ?enWikiTitle ?zhWikiTitle WHERE {
   VALUES ?item { ${values} }
   OPTIONAL { ?item wdt:P625 ?coord. }
   OPTIONAL { ?item wdt:P18 ?image. }
   OPTIONAL { ?item wdt:P1435 ?heritageId. }
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en,zh". }
+  OPTIONAL { ?item wdt:P856 ?officialWebsite. }
+  OPTIONAL { ?item wdt:P3025 ?openDays. }
+  OPTIONAL { ?item wdt:P571 ?inception. }
+  OPTIONAL {
+    ?enArticle schema:about ?item;
+      schema:isPartOf <https://en.wikipedia.org/>;
+      schema:name ?enWikiTitle.
+  }
+  OPTIONAL {
+    ?zhArticle schema:about ?item;
+      schema:isPartOf <https://zh.wikipedia.org/>;
+      schema:name ?zhWikiTitle.
+  }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "zh,en". }
 }`;
   const params = new URLSearchParams({ query, format: 'json' });
   const json = await fetchJson(`https://query.wikidata.org/sparql?${params.toString()}`, {
     headers: { accept: 'application/sparql-results+json' },
   });
 
-  return json.results.bindings.map((row) => ({
-    wikidataId: row.item?.value?.split('/').pop() ?? null,
-    label: row.itemLabel?.value ?? null,
-    description: row.itemDescription?.value ?? null,
-    coord: row.coord?.value ?? null,
-    image: row.image?.value ?? null,
-    heritageId: row.heritageId?.value?.split('/').pop() ?? null,
-  }));
+  const rows = new Map();
+  json.results.bindings.forEach((row) => {
+    const wikidataId = row.item?.value?.split('/').pop() ?? null;
+    if (!wikidataId) return;
+    const current = rows.get(wikidataId) ?? { wikidataId };
+    rows.set(wikidataId, {
+      ...current,
+      label: current.label ?? row.itemLabel?.value ?? null,
+      description: current.description ?? row.itemDescription?.value ?? null,
+      coord: current.coord ?? row.coord?.value ?? null,
+      image: current.image ?? row.image?.value ?? null,
+      heritageId: current.heritageId ?? row.heritageId?.value?.split('/').pop() ?? null,
+      officialWebsite: current.officialWebsite ?? row.officialWebsite?.value ?? null,
+      openDays: current.openDays ?? row.openDays?.value ?? null,
+      inception: current.inception ?? row.inception?.value ?? null,
+      enWikiTitle: current.enWikiTitle ?? row.enWikiTitle?.value ?? null,
+      zhWikiTitle: current.zhWikiTitle ?? row.zhWikiTitle?.value ?? null,
+    });
+  });
+  return [...rows.values()];
+}
+
+async function discoverItalianLandmarks() {
+  const rows = new Map();
+  for (const [rootId, kind] of Object.entries(DISCOVERY_ROOT_KINDS)) {
+    const query = `
+PREFIX schema: <http://schema.org/>
+SELECT DISTINCT ?item ?coord ?enWikiTitle ?sitelinks WHERE {
+  ?item wdt:P17 wd:Q38;
+    wdt:P625 ?coord;
+    wikibase:sitelinks ?sitelinks.
+  {
+    ?item wdt:P31 wd:${rootId}.
+  } UNION {
+    ?item wdt:P31 ?type.
+    ?type wdt:P279 wd:${rootId}.
+  }
+  ?enArticle schema:about ?item;
+    schema:isPartOf <https://en.wikipedia.org/>;
+    schema:name ?enWikiTitle.
+  FILTER(?sitelinks >= 8)
+}
+ORDER BY DESC(?sitelinks)
+LIMIT 80`;
+    const params = new URLSearchParams({ query, format: 'json' });
+    const json = await fetchJson(`https://query.wikidata.org/sparql?${params.toString()}`, {
+      attempts: 5,
+      headers: { accept: 'application/sparql-results+json' },
+    });
+    console.log(`Discovery ${rootId}: ${json.results.bindings.length} candidates`);
+    for (const row of json.results.bindings) {
+      const wikidataId = row.item?.value?.split('/').pop();
+      const coordinates = parsePoint(row.coord?.value);
+      if (!wikidataId || !coordinates || !row.enWikiTitle?.value) continue;
+      if (coordinates.lon < 6.5 || coordinates.lon > 18.7 || coordinates.lat < 35.3 || coordinates.lat > 47.2) continue;
+      const current = rows.get(wikidataId);
+      const candidate = {
+        id: `italy_${wikidataId.toLowerCase()}`,
+        wikidataId,
+        wiki: {
+          en: row.enWikiTitle.value,
+          zh: null,
+        },
+        lat: coordinates.lat,
+        lon: coordinates.lon,
+        kind,
+        sitelinks: Number(row.sitelinks?.value ?? 0),
+      };
+      if (!current || candidate.sitelinks > current.sitelinks) rows.set(wikidataId, candidate);
+    }
+    await sleep(350);
+  }
+  return [...rows.values()].sort((a, b) => b.sitelinks - a.sitelinks);
+}
+
+async function buildLandmarkCatalog() {
+  const seedIds = new Set(LANDMARKS.map((item) => item.wikidataId).filter(Boolean));
+  const seedTitles = new Set(LANDMARKS.map((item) => item.wiki.en.toLowerCase()));
+  const discovered = await discoverItalianLandmarks();
+  const additions = discovered.filter((item) => (
+    !seedIds.has(item.wikidataId)
+    && !seedTitles.has(item.wiki.en.toLowerCase())
+    && !EXCLUDED_WIKIDATA_IDS.has(item.wikidataId)
+  ));
+  const catalog = [...LANDMARKS, ...additions].slice(0, TARGET_LANDMARK_COUNT + 50);
+  if (catalog.length < TARGET_LANDMARK_COUNT) {
+    throw new Error(`Wikidata discovery returned only ${catalog.length}/${TARGET_LANDMARK_COUNT} usable Italian landmarks`);
+  }
+  return catalog;
+}
+
+async function loadExistingItems() {
+  try {
+    const payload = JSON.parse(await readFile(OUT_FILE, 'utf8'));
+    return new Map((payload.items ?? []).map((item) => [item.wikidataId, item]));
+  } catch {
+    return new Map();
+  }
 }
 
 function parsePoint(point) {
@@ -303,58 +418,281 @@ async function fetchWeather(lat, lon) {
   };
 }
 
-function fallbackWeather() {
-  return {
-    temperatureC: null,
-    weatherCode: null,
-    windKph: null,
-    observedAt: null,
-    source: 'open-meteo',
-  };
-}
-
 async function fetchRouteMetrics(landmarks) {
   const encoded = landmarks.map((item) => `${item.lon},${item.lat}`).join(';');
   const url = `https://router.project-osrm.org/route/v1/driving/${encoded}?overview=false&annotations=false&steps=false`;
   const json = await fetchJson(url);
   const route = json.routes?.[0];
+  if (!route || route.legs?.length !== landmarks.length - 1) {
+    throw new Error(`OSRM returned ${route?.legs?.length ?? 0} legs for ${landmarks.length} landmarks`);
+  }
   return {
-    distanceKm: route?.distance ? Number((route.distance / 1000).toFixed(1)) : null,
-    durationHours: route?.duration ? Number((route.duration / 3600).toFixed(2)) : null,
+    distanceKm: Number((route.distance / 1000).toFixed(1)),
+    durationHours: Number((route.duration / 3600).toFixed(2)),
+    legs: route.legs.map((leg, index) => ({
+      fromId: landmarks[index].id,
+      toId: landmarks[index + 1].id,
+      distanceKm: Number((leg.distance / 1000).toFixed(1)),
+      durationHours: Number((leg.duration / 3600).toFixed(2)),
+      source: 'osrm',
+    })),
     source: 'osrm',
   };
 }
 
+async function fetchRouteMatrix(landmarks) {
+  const expected = landmarks.length;
+  const blockSize = 20;
+  const distancesKm = Array.from({ length: expected }, () => Array(expected).fill(null));
+  const durationsHours = Array.from({ length: expected }, () => Array(expected).fill(null));
+
+  for (let sourceStart = 0; sourceStart < expected; sourceStart += blockSize) {
+    const sourceRows = landmarks.slice(sourceStart, sourceStart + blockSize);
+    for (let destinationStart = 0; destinationStart < expected; destinationStart += blockSize) {
+      const destinationRows = landmarks.slice(destinationStart, destinationStart + blockSize);
+      const combined = [];
+      const combinedIndex = new Map();
+      for (const item of [...sourceRows, ...destinationRows]) {
+        if (!combinedIndex.has(item.id)) {
+          combinedIndex.set(item.id, combined.length);
+          combined.push(item);
+        }
+      }
+      const encoded = combined.map((item) => `${item.lon},${item.lat}`).join(';');
+      const sources = sourceRows.map((item) => combinedIndex.get(item.id)).join(';');
+      const destinations = destinationRows.map((item) => combinedIndex.get(item.id)).join(';');
+      const url = `https://router.project-osrm.org/table/v1/driving/${encoded}?annotations=distance,duration&sources=${sources}&destinations=${destinations}`;
+      const json = await fetchJson(url, { attempts: 5 });
+      if (json.code !== 'Ok' || json.distances?.length !== sourceRows.length || json.durations?.length !== sourceRows.length) {
+        throw new Error(`OSRM matrix block failed at ${sourceStart},${destinationStart}`);
+      }
+      json.distances.forEach((row, sourceOffset) => {
+        row.forEach((value, destinationOffset) => {
+          distancesKm[sourceStart + sourceOffset][destinationStart + destinationOffset] = Number.isFinite(value)
+            ? Number((value / 1000).toFixed(1))
+            : null;
+        });
+      });
+      json.durations.forEach((row, sourceOffset) => {
+        row.forEach((value, destinationOffset) => {
+          durationsHours[sourceStart + sourceOffset][destinationStart + destinationOffset] = Number.isFinite(value)
+            ? Number((value / 3600).toFixed(2))
+            : null;
+        });
+      });
+      console.log(`Routing block ${sourceStart + 1}-${sourceStart + sourceRows.length} x ${destinationStart + 1}-${destinationStart + destinationRows.length}`);
+      await sleep(220);
+    }
+  }
+  const hasMissingValue = distancesKm.some((row) => row.some((value) => value === null))
+    || durationsHours.some((row) => row.some((value) => value === null));
+  if (hasMissingValue) throw new Error('OSRM matrix contains an unreachable landmark pair');
+  return {
+    ids: landmarks.map((item) => item.id),
+    distancesKm,
+    durationsHours,
+    source: 'osrm',
+  };
+}
+
+function routeFromMatrix(landmarks, matrix) {
+  const legs = landmarks.slice(1).map((item, index) => ({
+    fromId: landmarks[index].id,
+    toId: item.id,
+    distanceKm: matrix.distancesKm[index][index + 1],
+    durationHours: matrix.durationsHours[index][index + 1],
+    source: 'osrm',
+  }));
+  return {
+    distanceKm: Number(legs.reduce((sum, leg) => sum + leg.distanceKm, 0).toFixed(1)),
+    durationHours: Number(legs.reduce((sum, leg) => sum + leg.durationHours, 0).toFixed(2)),
+    legs,
+    source: 'osrm',
+  };
+}
+
+function visitMetadataFor(landmark) {
+  const kindById = {
+    milan_duomo: 'cathedral',
+    venice_rialto: 'bridge',
+    florence_duomo: 'cathedral',
+    pisa: 'tower',
+    colosseum: 'arena',
+    pompeii: 'ruins',
+    pantheon_rome: 'dome',
+    trevi_fountain: 'fountain',
+    roman_forum: 'ruins',
+    uffizi_gallery: 'museum',
+    siena_cathedral: 'cathedral',
+    verona_arena: 'arena',
+    st_marks_basilica: 'cathedral',
+    doges_palace: 'palace',
+    cinque_terre: 'coast',
+    lake_como: 'lake',
+    mole_antonelliana: 'tower',
+    san_vitale_ravenna: 'cathedral',
+    assisi_basilica: 'cathedral',
+    caserta_palace: 'palace',
+    herculaneum: 'ruins',
+    paestum: 'temple',
+    matera_sassi: 'village',
+    alberobello_trulli: 'village',
+    castel_del_monte: 'castle',
+    amalfi_coast: 'coast',
+    valley_of_temples: 'temple',
+    mount_etna: 'mountain',
+    palermo_cathedral: 'cathedral',
+    nuraghe_su_nuraxi: 'ruins',
+  };
+  const kind = landmark.kind ?? kindById[landmark.id] ?? 'landmark';
+  const durationByKind = {
+    arena: 2,
+    bridge: 1,
+    castle: 2,
+    cathedral: 2,
+    coast: 4,
+    dome: 1.5,
+    fountain: 0.75,
+    lake: 4,
+    mountain: 4,
+    museum: 3,
+    palace: 2.5,
+    ruins: 2.5,
+    temple: 2,
+    tower: 1.5,
+    village: 3,
+  };
+  const firstTimerKinds = new Set(['arena', 'cathedral', 'dome', 'tower', 'bridge', 'fountain']);
+  return {
+    durationHours: durationByKind[kind] ?? 2,
+    bestTime: {
+      en: kind === 'fountain' ? 'Evening' : kind === 'ruins' ? 'Morning' : kind === 'coast' ? 'Spring' : 'Flexible',
+      zh: kind === 'fountain' ? '傍晚' : kind === 'ruins' ? '清晨' : kind === 'coast' ? '春季' : '灵活',
+    },
+    audiences: {
+      en: [kind === 'coast' || kind === 'lake' ? 'easy walk' : 'history', 'architecture photos', firstTimerKinds.has(kind) ? 'first Italy trip' : 'slow travel'],
+      zh: [kind === 'coast' || kind === 'lake' ? '轻松散步' : '历史文化', '建筑摄影', firstTimerKinds.has(kind) ? '第一次来意大利' : '慢慢逛'],
+    },
+    bookingNote: {
+      en: 'Check opening hours and reservation rules before departure.',
+      zh: '开放时间和预约规则出发前再确认。',
+    },
+    fit: {
+      en: firstTimerKinds.has(kind) ? 'Great for a first Italy route.' : 'Good as a route-specific stop.',
+      zh: firstTimerKinds.has(kind) ? '很适合第一次意大利路线。' : '适合作为顺路停靠点。',
+    },
+    firstTimer: firstTimerKinds.has(kind),
+    sourceNote: {
+      en: 'This is an editorial planning allowance, not an official visit duration.',
+      zh: '这是行程编排用的建议预留时间，不是景点官方公布的游览时长。',
+    },
+  };
+}
+
+function validatePayload(payload, expected) {
+  if (payload.items.length !== expected) throw new Error(`Expected ${expected} landmarks, received ${payload.items.length}`);
+  if (new Set(payload.items.map((item) => item.id)).size !== expected) throw new Error('Landmark ids are not unique');
+
+  payload.items.forEach((item) => {
+    if (!item.wikipedia.en?.extract || !item.wikipedia.zh?.extract) throw new Error(`Missing bilingual Wikipedia summary for ${item.id}`);
+    if (![item.coordinates.lat, item.coordinates.lon].every(Number.isFinite)) throw new Error(`Missing coordinates for ${item.id}`);
+    if (![item.weather.temperatureC, item.weather.weatherCode, item.weather.windKph].every(Number.isFinite)) {
+      throw new Error(`Missing weather observation for ${item.id}`);
+    }
+    if (!item.wikidata.source) throw new Error(`Missing Wikidata source for ${item.id}`);
+  });
+
+  if (payload.route.legs.length !== expected - 1) throw new Error('Default route has an incomplete OSRM leg list');
+  if (payload.routeMatrix.ids.length !== expected) throw new Error('OSRM matrix id list is incomplete');
+  if (payload.routeMatrix.distancesKm.length !== expected || payload.routeMatrix.durationsHours.length !== expected) {
+    throw new Error('OSRM matrix row count is incomplete');
+  }
+  if (payload.routeMatrix.distancesKm.some((row) => row.length !== expected || row.some((value) => !Number.isFinite(value)))) {
+    throw new Error('OSRM distance matrix contains an invalid value');
+  }
+  if (payload.routeMatrix.durationsHours.some((row) => row.length !== expected || row.some((value) => !Number.isFinite(value)))) {
+    throw new Error('OSRM duration matrix contains an invalid value');
+  }
+}
+
 async function main() {
+  const discoveredCatalog = await buildLandmarkCatalog();
+  const existingItems = await loadExistingItems();
+  const landmarkCatalog = [];
+  const resolvedWikidataIds = new Set();
+  let discoveryCursor = 0;
+  console.log(`Discovered ${discoveredCatalog.length} verified Italian landmarks.`);
   const resolved = [];
-  for (const [index, landmark] of LANDMARKS.entries()) {
-    console.log(`Fetching ${index + 1}/${LANDMARKS.length}: ${landmark.id}`);
-    const summaryEn = await fetchWikipediaSummary(landmark.wiki.en, 'en').catch(() => fallbackWikipediaSummary(landmark.wiki.en, 'en'));
-    await sleep(250);
-    const summaryZh = await fetchWikipediaSummary(landmark.wiki.zh, 'zh').catch(() => null);
-    const weather = await fetchWeather(landmark.lat, landmark.lon).catch(() => fallbackWeather());
+  while (landmarkCatalog.length < TARGET_LANDMARK_COUNT) {
+    const landmark = discoveredCatalog[discoveryCursor++];
+    if (!landmark) {
+      throw new Error(`Could not fill ${TARGET_LANDMARK_COUNT} unique Wikidata landmarks`);
+    }
+    console.log(`Fetching ${landmarkCatalog.length + 1}/${TARGET_LANDMARK_COUNT}: ${landmark.id}`);
+    const summaryEn = await fetchWikipediaSummary(landmark.wiki.en, 'en');
+    if (!summaryEn.wikibaseItem && !landmark.wikidataId) {
+      throw new Error(`No Wikidata id resolved for ${landmark.id}`);
+    }
+    if (landmark.wikidataId && summaryEn.wikibaseItem && landmark.wikidataId !== summaryEn.wikibaseItem) {
+      throw new Error(`${landmark.id} Wikidata mismatch: configured ${landmark.wikidataId}, Wikipedia resolved ${summaryEn.wikibaseItem}`);
+    }
+    const wikidataId = summaryEn.wikibaseItem ?? landmark.wikidataId;
+    if (resolvedWikidataIds.has(wikidataId)) {
+      console.log(`Skipping duplicate Wikidata entity ${wikidataId}: ${landmark.id}`);
+      continue;
+    }
+    const cached = existingItems.get(wikidataId);
+    const weather = cached?.weather ?? await fetchWeather(landmark.lat, landmark.lon);
+    resolvedWikidataIds.add(wikidataId);
+    landmarkCatalog.push(landmark);
     resolved.push({
       landmark,
-      summaryEn,
-      summaryZh,
+      summaryEn: cached?.wikipedia?.en ?? summaryEn,
       weather,
-      wikidataId: landmark.wikidataId ?? summaryEn.wikibaseItem ?? null,
+      wikidataId,
+      cached,
     });
-    await sleep(650);
+    await sleep(350);
   }
 
   const wikidataRows = await fetchWikidataRows([...new Set(resolved.map((item) => item.wikidataId).filter(Boolean))]);
   const wikidataById = new Map(wikidataRows.map((row) => [row.wikidataId, row]));
+  if (wikidataById.size !== resolved.length) {
+    const missing = resolved.map((item) => item.wikidataId).filter((id) => !wikidataById.has(id));
+    throw new Error(`Wikidata resolved ${wikidataById.size}/${resolved.length} landmarks; missing ${missing.join(', ')}`);
+  }
 
   const items = [];
-  for (const { landmark, summaryEn, summaryZh, weather, wikidataId } of resolved) {
-    const wikidata = wikidataById.get(wikidataId) ?? {};
+  for (const { landmark, summaryEn, weather, wikidataId, cached } of resolved) {
+    if (cached) {
+      items.push({
+        ...cached,
+        id: landmark.id,
+        category: landmark.kind ?? cached.category ?? null,
+        coordinates: { lat: landmark.lat, lon: landmark.lon },
+        routeHints: [],
+      });
+      continue;
+    }
+    const wikidata = wikidataById.get(wikidataId);
+    if (!wikidata) throw new Error(`Missing Wikidata row for ${landmark.id}`);
+    const zhTitle = wikidata.zhWikiTitle ?? landmark.wiki.zh;
+    const fetchedSummaryZh = zhTitle ? await fetchWikipediaSummary(zhTitle, 'zh') : null;
+    const summaryZh = fetchedSummaryZh ?? {
+      ...summaryEn,
+      title: wikidata.label ?? summaryEn.title,
+      languageFallback: 'en',
+    };
     const wikidataCoord = parsePoint(wikidata.coord);
     const coords = wikidataCoord ?? { lat: landmark.lat, lon: landmark.lon };
+    if (![coords.lat, coords.lon].every(Number.isFinite)) {
+      throw new Error(`Invalid coordinates for ${landmark.id}`);
+    }
 
     items.push({
       id: landmark.id,
       wikidataId,
+      category: landmark.kind ?? null,
       name: {
         en: summaryEn.title,
         zh: summaryZh?.title ?? landmark.wiki.zh,
@@ -365,6 +703,9 @@ async function main() {
         description: wikidata.description ?? null,
         image: wikidata.image ?? null,
         heritageId: wikidata.heritageId ?? null,
+        officialWebsite: wikidata.officialWebsite ?? null,
+        openDays: wikidata.openDays ?? null,
+        inception: wikidata.inception ?? null,
         source: wikidataId ? `https://www.wikidata.org/wiki/${wikidataId}` : null,
       },
       wikipedia: {
@@ -372,13 +713,37 @@ async function main() {
         zh: summaryZh,
       },
       weather,
+      visit: visitMetadataFor(landmark),
+      routeHints: [],
+      sources: {
+        wikipedia: {
+          en: summaryEn.pageUrl,
+          zh: summaryZh?.pageUrl ?? null,
+          fetchedAt: new Date().toISOString(),
+        },
+        wikidata: wikidataId ? `https://www.wikidata.org/wiki/${wikidataId}` : null,
+        weather: 'https://open-meteo.com/en/docs',
+        routing: 'https://project-osrm.org/',
+      },
     });
 
   }
 
-  const route = await fetchRouteMetrics(LANDMARKS).catch((error) => {
-    console.warn(`Route fetch failed: ${error.message}`);
-    return { distanceKm: null, durationHours: null, source: 'osrm' };
+  const routeLandmarks = items.map((item) => ({
+    id: item.id,
+    lat: item.coordinates.lat,
+    lon: item.coordinates.lon,
+  }));
+  const routeMatrix = await fetchRouteMatrix(routeLandmarks);
+  const route = routeFromMatrix(routeLandmarks, routeMatrix);
+  items.forEach((item, index) => {
+    const leg = route.legs[index];
+    item.routeHints = leg ? [{
+      nextStopId: leg.toId,
+      distanceKm: leg.distanceKm,
+      durationHours: leg.durationHours,
+      source: leg.source,
+    }] : [];
   });
   const payload = {
     generatedAt: new Date().toISOString(),
@@ -390,8 +755,10 @@ async function main() {
     },
     items,
     route,
+    routeMatrix,
   };
 
+  validatePayload(payload, landmarkCatalog.length);
   await mkdir(path.dirname(OUT_FILE), { recursive: true });
   await writeFile(OUT_FILE, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
   console.log(`Wrote ${items.length} landmarks to ${path.relative(ROOT, OUT_FILE)}`);

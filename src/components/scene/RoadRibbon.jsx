@@ -55,6 +55,14 @@ export function RoadRibbon() {
       geometry.computeVertexNormals();
       return geometry;
     };
+  }, [activeRoute.signature, cameraMode, localProgress, terrain.status, terrain.version]);
+
+    const dashGeometries = [];
+    const dashEvery = activeRoute.source === 'osrm' ? 18 : 12;
+    const dashLength = Math.max(4, Math.floor(dashEvery * 0.48));
+    for (let start = 3; start < points.length - 2; start += dashEvery) {
+      dashGeometries.push(buildStrip(DASH_WIDTH, 0.044, start, Math.min(start + dashLength, points.length - 1)));
+    }
 
     const dashGeometries = [];
     const dashEvery = activeRoute.source === 'osrm' ? 18 : 12;
@@ -103,6 +111,27 @@ export function RoadRibbon() {
       });
     }
 
+    const markerPoint = points[progressIndex] ?? points[0];
+    const vehicleMarker = [markerPoint.x, heights[progressIndex] + 0.13, markerPoint.z];
+    const roadsideMarkers = [];
+    const markerEvery = activeRoute.source === 'osrm' ? 52 : 32;
+    for (let index = 10; index < points.length - 10; index += markerEvery) {
+      const curr = points[index];
+      const next = points[Math.min(index + 1, points.length - 1)];
+      const prev = points[Math.max(index - 1, 0)];
+      const tangent = new THREE.Vector3().subVectors(next, prev).setY(0).normalize();
+      const normal = new THREE.Vector3(-tangent.z, 0, tangent.x);
+      const side = (index / markerEvery) % 2 === 0 ? 1 : -1;
+      roadsideMarkers.push({
+        id: `roadside-${index}`,
+        kind: index % (markerEvery * 2) === 0 ? 'lamp' : 'tree',
+        position: [curr.x + normal.x * side * 2.8, heights[index] + 0.05, curr.z + normal.z * side * 2.8],
+      });
+    }
+
+  const overview = useMemo(() => {
+    if (cameraMode !== 'map') return null;
+    const routeStopIds = activeRoute.routeIds.length ? activeRoute.routeIds : FALLBACK_ROUTE_IDS;
     return {
       baseRoadGeometry: buildStrip(ROAD_WIDTH, 0.025),
       passedRoadGeometry: buildStrip(PASSED_WIDTH, 0.04, 0, progressIndex),
@@ -114,8 +143,27 @@ export function RoadRibbon() {
     };
   }, [activeRoute, nearbyLandmarkId, routeProgress, terrain.version]);
 
-  if (terrain.status !== 'ready') return null;
+  if (cameraMode === 'map' && overview) {
+    return (
+      <group>
+        <mesh geometry={overviewGeometry} renderOrder={2}>
+          <meshBasicMaterial color="#314f5c" />
+        </mesh>
+        {overview.stops.map((stop) => (
+          <mesh key={stop.id} position={stop.position} rotation={[-Math.PI / 2, 0, 0]}>
+            <circleGeometry args={[stop.active ? 0.9 : 0.62, 16]} />
+            <meshBasicMaterial color={stop.active ? '#f0d490' : '#ffffff'} />
+          </mesh>
+        ))}
+        <mesh position={[overview.vehicle.x, 0.16, overview.vehicle.z]}>
+          <sphereGeometry args={[0.42, 12, 8]} />
+          <meshBasicMaterial color="#56d6e6" />
+        </mesh>
+      </group>
+    );
+  }
 
+  if (!localRoad) return null;
   return (
     <group>
       <mesh geometry={edgeGeometries[0]} receiveShadow>
