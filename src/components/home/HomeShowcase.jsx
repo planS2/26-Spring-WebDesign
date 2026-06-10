@@ -2,9 +2,9 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { landmarks } from '../../data/landmarks.js';
+import { landmarks as baseLandmarks, lngLatToWorld } from '../../data/landmarks.js';
 import { useAppStore } from '../../state/useAppStore.js';
-import liveLandmarksData from '../../../public/data/live-landmarks.json';
+import liveLandmarksData from '../../../data/live-landmarks.json';
 
 const versions = [
   {
@@ -37,6 +37,7 @@ const versions = [
 const storyModelPaths = {
   colosseum: '/models/romes_colosseum.glb',
   pisa: '/models/pisas_tower.glb',
+  duomo: '/models/milan_cathedral.glb',
   florence: '/models/santa-maria-del-fiore/source/Santa%20Maria.glb',
 };
 
@@ -2718,7 +2719,7 @@ export function HomeShowcase({ onOpenDrive }) {
   const [accountPlanReady, setAccountPlanReady] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [visibleCount, setVisibleCount] = useState(12);
-  const setActiveRouteIds = useAppStore((state) => state.setActiveRouteIds);
+
 
   const options = useMemo(() => ({
     regions: [...new Set(landmarks.map(regionFor))].sort(),
