@@ -65,6 +65,7 @@ const driveRouteCopy = {
       nextStop: '下一站',
       progress: '导览进度',
       speed: '当前速度',
+      playbackRate: '导览速度',
       start: '开始导览',
       pause: '暂停',
       resume: '继续',
@@ -80,7 +81,7 @@ const driveRouteCopy = {
       arrived: '已到达',
       rating: '评分',
       stay: '建议停留',
-      continue: '继续导览',
+      continue: '从此处继续导览',
       startHint: '点击开始导览',
       pausedHint: '已暂停，点击继续导览',
       completeHint: '路线导览完成',
@@ -157,6 +158,7 @@ const driveRouteCopy = {
       nextStop: '下一站',
       progress: '导览进度',
       speed: '当前速度',
+      playbackRate: '导览速度',
       start: '开始导览',
       pause: '暂停',
       resume: '继续',
@@ -172,7 +174,7 @@ const driveRouteCopy = {
       arrived: '已到达',
       rating: '评分',
       stay: '建议停留',
-      continue: '继续导览',
+      continue: '从此处继续导览',
       startHint: '点击开始导览',
       pausedHint: '已暂停，点击继续导览',
       completeHint: '路线导览完成',
@@ -247,6 +249,9 @@ export function UIOverlay({ isStarted, onClose }) {
     focusPanelOpen,
     modelViewerOpen,
     autoDrive,
+    guidePlaybackRate,
+    setGuidePlaybackRate,
+    jumpVehicleToLandmark,
     setFocusPanelOpen,
     setModelViewerOpen,
     setCameraMode,
@@ -291,6 +296,7 @@ export function UIOverlay({ isStarted, onClose }) {
   const timelineLandmark = landmarks.find((item) => item.id === timelineLandmarkId);
   const timelineMeta = getArrivalMeta(timelineLandmark?.id);
   const visitedCount = Math.max(arrivedLandmarkIds.length, isComplete ? routeStops.length : 0);
+  const playbackPresets = [1, 4, 8, 20];
   const distanceText = activeRouteDistanceKm
     ? `${activeRouteDistanceKm < 10 ? activeRouteDistanceKm.toFixed(1) : Math.round(activeRouteDistanceKm)} km`
     : '约 920 km';
@@ -419,8 +425,20 @@ export function UIOverlay({ isStarted, onClose }) {
           <div><dt>{panelCopy.nextStop}</dt><dd>{isComplete ? panelCopy.finished : getLandmarkName(nextStop, language) || panelCopy.finished}</dd></div>
           <div><dt>{panelCopy.progress}</dt><dd>{progressPercent}%</dd></div>
           <div><dt>{panelCopy.speed}</dt><dd>{Math.round(vehicleSpeed ?? 0)} {routeCopy.speedUnit}</dd></div>
+          <div><dt>{panelCopy.playbackRate}</dt><dd>{guidePlaybackRate}x</dd></div>
         </dl>
         <div className="tour-info-panel__progress"><span style={{ width: `${progressPercent}%` }} /></div>
+        <p className="tour-info-panel__subhead">{panelCopy.playbackRate}：{guidePlaybackRate}x</p>
+        <div className="tour-info-panel__speed-actions" aria-label={panelCopy.playbackRate}>
+          {playbackPresets.map((rate) => (
+            <button key={rate} type="button" className={guidePlaybackRate === rate ? 'is-active' : ''} onClick={() => setGuidePlaybackRate(rate)}>{rate}x</button>
+          ))}
+        </div>
+        <label className="tour-info-panel__speed-slider">
+          <span>1x</span>
+          <input type="range" min="1" max="30" step="1" value={guidePlaybackRate} onChange={(event) => setGuidePlaybackRate(event.target.value)} />
+          <span>30x</span>
+        </label>
         <p className="tour-info-panel__subhead">{panelCopy.viewMode}</p>
         <div className="tour-info-panel__view-actions">
           <button type="button" className={cameraMode === 'follow' ? 'is-active' : ''} onClick={() => setCameraMode('follow')}>{panelCopy.followView}</button>
@@ -468,7 +486,7 @@ export function UIOverlay({ isStarted, onClose }) {
                 key={stop.id}
                 type="button"
                 className={`route-timeline__stop ${reached ? 'is-reached' : ''} ${current ? 'is-current' : ''}`}
-                onClick={() => setTimelineLandmarkId(stop.id)}
+                onClick={() => { jumpVehicleToLandmark(stop.id); setTimelineLandmarkId(null); }}
               >
                 <span>{index + 1}</span>
                 <strong>{getLandmarkName(stop, language)}</strong>

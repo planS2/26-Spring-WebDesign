@@ -10,7 +10,7 @@ import { getRouteProfile } from '../../data/routes.js';
 import { sampleRoadSurface, worldPosToHeight } from '../../data/terrain.js';
 
 const START_PROGRESS = 0;
-const VEHICLE_SCALE = worldUnitsFromMeters(4.6) / 4.12;
+const VEHICLE_SCALE = (worldUnitsFromMeters(4.6) / 4.12) * 0.8;
 const WHEEL_GROUND_CLEARANCE = (0.34 - 0.2) * VEHICLE_SCALE + worldUnitsFromMeters(0.04);
 const VEHICLE_TUNING = {
   simulationTimeScale: 60,
@@ -80,6 +80,8 @@ export function VehicleController({ bodyRef, drivingEnabled, driveEntry }) {
   const arrivalNotice = useAppStore((state) => state.arrivalNotice);
   const showArrivalNotice = useAppStore((state) => state.showArrivalNotice);
   const cameraMode = useAppStore((state) => state.cameraMode);
+  const guidePlaybackRate = useAppStore((state) => state.guidePlaybackRate);
+  const vehicleJumpRequest = useAppStore((state) => state.vehicleJumpRequest);
   const progressRef = useRef(START_PROGRESS);
   const speedRef = useRef(0);
   const targetSpeedRef = useRef(0);
@@ -95,6 +97,7 @@ export function VehicleController({ bodyRef, drivingEnabled, driveEntry }) {
   const previousProgressRef = useRef(START_PROGRESS);
   const uiSyncElapsedRef = useRef(UI_SYNC_INTERVAL);
   const nearbyLandmarkIdRef = useRef(null);
+  const handledJumpTokenRef = useRef(null);
 
   const routeCurve = activeRoute.curve;
 
@@ -128,6 +131,7 @@ export function VehicleController({ bodyRef, drivingEnabled, driveEntry }) {
       visitedLandmarksRef.current = new Set();
       previousProgressRef.current = progressRef.current;
       initializedTargetRef.current = routeInitKey;
+      handledJumpTokenRef.current = vehicleJumpRequest?.token ?? null;
       applyCurvePose(vehicle, routeCurve, progressRef.current, 0, poseYawRef, posePitchRef, poseRollRef, delta);
       const initialNearbyLandmarkId = getNearbyLandmarkId(currentPoint.x, currentPoint.z);
       nearbyLandmarkIdRef.current = initialNearbyLandmarkId;
@@ -157,6 +161,32 @@ export function VehicleController({ bodyRef, drivingEnabled, driveEntry }) {
       setGuidedTourState(getGuidedTourPayload(GUIDED_TOUR_STATES.IDLE));
       setVehicleState({ vehicleSpeed: 0, vehicleSteer: 0, routeContext: getRouteContext(progressRef.current, activeRoute, routeCurve), ...getRouteTimeline(progressRef.current) });
       applyCurvePose(vehicle, routeCurve, progressRef.current, 0, poseYawRef, posePitchRef, poseRollRef, delta);
+      return;
+    }
+
+    if (vehicleJumpRequest?.token && handledJumpTokenRef.current !== vehicleJumpRequest.token) {
+      const targetStation = stationTriggers.find((station) => station.id === vehicleJumpRequest.landmarkId);
+      const targetProgress = targetStation?.progress ?? getLandmarkProgress(vehicleJumpRequest.landmarkId, routeCurve);
+      progressRef.current = THREE.MathUtils.clamp(targetProgress, 0, 1);
+      previousProgressRef.current = progressRef.current;
+      speedRef.current = 0;
+      targetSpeedRef.current = 0;
+      steerRef.current = 0;
+      guidedTourStateRef.current = GUIDED_TOUR_STATES.FOCUS_POI;
+      focusedLandmarkIdRef.current = vehicleJumpRequest.landmarkId;
+      focusTimerRef.current = 0;
+      nearbyLandmarkIdRef.current = vehicleJumpRequest.landmarkId;
+      handledJumpTokenRef.current = vehicleJumpRequest.token;
+      applyCurvePose(vehicle, routeCurve, progressRef.current, 0, poseYawRef, posePitchRef, poseRollRef, delta);
+      setNearbyLandmarkId(vehicleJumpRequest.landmarkId);
+      setGuidedTourState(getGuidedTourPayload(GUIDED_TOUR_STATES.FOCUS_POI, vehicleJumpRequest.landmarkId, '已跳转到站点'));
+      setVehicleState({
+        vehicleSpeed: 0,
+        vehicleSteer: 0,
+        routeContext: getRouteContext(progressRef.current, activeRoute, routeCurve),
+        ...getRouteTimeline(progressRef.current),
+      });
+      setAutoDrive(false);
       return;
     }
 
@@ -249,7 +279,7 @@ export function VehicleController({ bodyRef, drivingEnabled, driveEntry }) {
 
     const travelSpeedKmh = Math.sign(speedRef.current) * Math.min(Math.abs(speedRef.current), 145);
     const progressDelta = (travelSpeedKmh / Math.max(activeRoute.distanceKm ?? activeRoute.distance ?? activeRoute.totalDistanceKm ?? 1, 1) / 3600)
-      * VEHICLE_TUNING.simulationTimeScale * delta;
+      * VEHICLE_TUNING.simulationTimeScale * (autoDrive ? guidePlaybackRate : 1) * delta;
 
     // 使用 delta time 推进路线进度，并始终限制在 0-1，避免不同帧率或自动巡航导致越界。
     const nextProgress = THREE.MathUtils.clamp(progressRef.current + progressDelta, 0, 1);
@@ -657,6 +687,14 @@ export function VehicleChassis({ bodyRef }) {
   return (
     <group ref={bodyRef} scale={VEHICLE_SCALE}>
       <group ref={rootRef}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.055, -0.06]}>
+          <circleGeometry args={[1.72, 40]} />
+          <meshBasicMaterial color="#05070b" transparent opacity={0.24} depthWrite={false} />
+        </mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.07, 0.1]}>
+          <ringGeometry args={[1.18, 1.55, 48]} />
+          <meshBasicMaterial color="#7ed8ff" transparent opacity={autoDrive ? 0.2 : 0.1} depthWrite={false} blending={THREE.AdditiveBlending} />
+        </mesh>
         <mesh castShadow position={[0, 0.58, -0.02]}>
           <boxGeometry args={[2.16, 0.46, 4.12]} />
           <meshStandardMaterial color={autoDrive ? '#d29b62' : '#b87452'} roughness={0.48} metalness={0.16} />
