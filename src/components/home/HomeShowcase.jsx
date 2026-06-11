@@ -2,10 +2,9 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { landmarks as baseLandmarks, lngLatToWorld } from '../../data/landmarks.js';
+import { landmarks } from '../../data/landmarks.js';
 import { useAppStore } from '../../state/useAppStore.js';
 import { fetchRouteMetrics, useRouteMetrics } from '../../hooks/useRouteMetrics.js';
-import liveLandmarksData from '../../../public/data/live-landmarks.json';
 
 const versions = [
   {
@@ -41,37 +40,9 @@ const storyModelPaths = {
   florence: '/models/santa-maria-del-fiore/source/Santa%20Maria.glb',
 };
 
-const liveIndex = new Map((liveLandmarksData.items ?? []).map((item) => [item.id, item]));
-const baseLandmarkIndex = new Map(baseLandmarks.map((item) => [item.id, item]));
-const landmarks = (liveLandmarksData.items ?? []).map((item) => {
-  const existing = baseLandmarkIndex.get(item.id);
-  const lon = item.coordinates.lon;
-  const lat = item.coordinates.lat;
-  if (existing) {
-    return {
-      ...existing,
-      lon,
-      lat,
-      position: lngLatToWorld(lon, lat),
-      modelKind: item.category ?? existing.modelKind,
-    };
-  }
-  return {
-    id: item.id,
-    name: item.name.en,
-    description: item.wikipedia?.en?.extract ?? '',
-    modelPath: null,
-    lon,
-    lat,
-    position: lngLatToWorld(lon, lat),
-    rotation: [0, 0, 0],
-    scale: 5.8,
-    triggerRadius: 13,
-    modelKind: item.category ?? 'monument',
-  };
-});
-const routeMatrixIds = liveLandmarksData.routeMatrix?.ids ?? [];
-const routeMatrixIndex = new Map(routeMatrixIds.map((id, index) => [id, index]));
+const liveIndex = new Map();
+const routeMatrixIds = landmarks.map((item) => item.id);
+const DATA_UPDATED_LABEL = 'This build';
 const initialRouteIds = ['milan_duomo', 'venice_rialto', 'florence_duomo', 'pisa', 'colosseum', 'pompeii'];
 
 const routePresets = [
@@ -435,15 +406,26 @@ function seasonText(landmark, language) {
   return seasonLabels[language]?.[season] ?? season;
 }
 
+function fallbackSegmentMetrics(a, b) {
+  if (!a || !b) return { distance: 0, duration: 0 };
+  const toRad = (value) => (value * Math.PI) / 180;
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const dLat = toRad(b.lat - a.lat);
+  const dLon = toRad(b.lon - a.lon);
+  const sinLat = Math.sin(dLat / 2);
+  const sinLon = Math.sin(dLon / 2);
+  const h = sinLat * sinLat + Math.cos(lat1) * Math.cos(lat2) * sinLon * sinLon;
+  const distance = 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+  return { distance, duration: distance / 82 };
+}
+
 function distanceKm(routeStops) {
   return Math.round(routeSegmentsFor(routeStops).reduce((sum, segment) => sum + segment.distance, 0));
 }
 
 function segmentDistanceKm(a, b) {
-  if (!a || !b) return 0;
-  const fromIndex = routeMatrixIndex.get(a.id);
-  const toIndex = routeMatrixIndex.get(b.id);
-  const distance = liveLandmarksData.routeMatrix?.distancesKm?.[fromIndex]?.[toIndex];
+  const { distance } = fallbackSegmentMetrics(a, b);
   return Number.isFinite(distance) ? distance : Number.POSITIVE_INFINITY;
 }
 
@@ -493,17 +475,14 @@ function optimizeRouteIds(routeIds, lockedIds) {
 function routeSegmentsFor(routeStops) {
   return routeStops.slice(1).map((stop, index) => {
     const from = routeStops[index];
-    const fromIndex = routeMatrixIndex.get(from.id);
-    const toIndex = routeMatrixIndex.get(stop.id);
-    const distance = liveLandmarksData.routeMatrix?.distancesKm?.[fromIndex]?.[toIndex];
-    const duration = liveLandmarksData.routeMatrix?.durationsHours?.[fromIndex]?.[toIndex];
+    const { distance, duration } = fallbackSegmentMetrics(from, stop);
     if (!Number.isFinite(distance) || !Number.isFinite(duration)) return null;
     return {
       from,
       to: stop,
       distance,
       duration,
-      source: 'osrm',
+      source: 'approx',
     };
   }).filter(Boolean);
 }
@@ -2132,14 +2111,10 @@ function HomeHero({ language, routeStops, selectedStop, onOpenDrive }) {
 }
 
 function HomeStats({ language }) {
-  const generatedDate = new Date(liveLandmarksData.generatedAt);
-  const dateLabel = Number.isNaN(generatedDate.getTime())
-    ? homeText(language, '本次构建', 'This build')
-    : generatedDate.toLocaleDateString(language === 'zh' ? 'zh-CN' : 'en-GB');
-  const sourceCount = Object.keys(liveLandmarksData.sources ?? {}).length;
+  const dateLabel = homeText(language, '本次构建', DATA_UPDATED_LABEL);
   const stats = language === 'zh'
-    ? [[String(liveIndex.size), '真实景点资料'], [String(sourceCount), '公开数据源'], [String(routeMatrixIds.length ** 2), '道路组合'], [dateLabel, '数据更新时间']]
-    : [[String(liveIndex.size), 'Sourced landmarks'], [String(sourceCount), 'Public data sources'], [String(routeMatrixIds.length ** 2), 'Road combinations'], [dateLabel, 'Data updated']];
+    ? [[String(landmarks.length), '景点资料'], ['内置', '公开数据源'], [String(routeMatrixIds.length ** 2), '路线组合'], [dateLabel, '数据更新时间']]
+    : [[String(landmarks.length), 'Landmarks'], ['Built-in', 'Public data sources'], [String(routeMatrixIds.length ** 2), 'Route combinations'], [dateLabel, 'Data updated']];
   return <section className="cinematic-stats" aria-label={language === 'zh' ? '\u6570\u636e\u6982\u89c8' : 'Overview stats'}>{stats.map(([value, label]) => <article key={label}><strong>{value}</strong><span>{label}</span></article>)}</section>;
 }
 
