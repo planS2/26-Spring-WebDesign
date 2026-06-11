@@ -4,8 +4,7 @@ import { landmarks } from '../../data/landmarks.js';
 import { useAppStore } from '../../state/useAppStore.js';
 
 const CESIUM_VERSION = '1.142';
-const DEV_CESIUM_BASE = '/node_modules/cesium/Build/Cesium/';
-const PROD_CESIUM_BASE = '/cesium/';
+const LOCAL_CESIUM_BASE = '/cesium/';
 const CDN_CESIUM_BASE = `https://cdn.jsdelivr.net/npm/cesium@${CESIUM_VERSION}/Build/Cesium/`;
 const START_PROGRESS = 0;
 const UI_SYNC_INTERVAL_MS = 100;
@@ -50,7 +49,7 @@ async function loadCesiumRuntime() {
   if (window.Cesium) return window.Cesium;
   if (!cesiumRuntimePromise) {
     cesiumRuntimePromise = (async () => {
-      const localBase = import.meta.env.DEV ? DEV_CESIUM_BASE : PROD_CESIUM_BASE;
+      const localBase = LOCAL_CESIUM_BASE;
       let cesiumBaseUrl = localBase;
       ensureStylesheet(`${localBase}Widgets/widgets.css`);
       try {
