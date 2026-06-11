@@ -1334,3 +1334,42 @@ body.ui-awake .hud-mode {
     display: none;
   }
 }
+
+.tour-info-panel__speed-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.38rem;
+  margin: 0.45rem 0 0.5rem;
+}
+
+.tour-info-panel__speed-actions button {
+  border: 1px solid rgba(128, 215, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(7, 16, 26, 0.62);
+  color: rgba(238, 248, 255, 0.82);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.38rem 0.45rem;
+  cursor: pointer;
+}
+
+.tour-info-panel__speed-actions button.is-active {
+  background: linear-gradient(135deg, rgba(126, 216, 255, 0.92), rgba(212, 164, 106, 0.88));
+  color: #06111c;
+  box-shadow: 0 0 18px rgba(126, 216, 255, 0.24);
+}
+
+.tour-info-panel__speed-slider {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(230, 242, 250, 0.7);
+  font-size: 0.68rem;
+  margin-bottom: 0.6rem;
+}
+
+.tour-info-panel__speed-slider input {
+  accent-color: #80d7ff;
+  width: 100%;
+}

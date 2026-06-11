@@ -20,6 +20,8 @@ export const useAppStore = create((set, get) => ({
   arrivalNotice: null,
   arrivedLandmarkIds: [],
   tourResetToken: 0,
+  guidePlaybackRate: 8,
+  vehicleJumpRequest: null,
   autoDrive: false,
   sidebarOpen: true,
   focusPanelOpen: false,
@@ -56,6 +58,27 @@ export const useAppStore = create((set, get) => ({
     autoDrive,
     cameraMode: autoDrive && !state.focusPanelOpen && !state.modelViewerOpen ? 'follow' : state.cameraMode,
   })),
+  setGuidePlaybackRate: (guidePlaybackRate) => set({
+    guidePlaybackRate: Math.min(Math.max(Number(guidePlaybackRate) || 1, 1), 30),
+  }),
+  jumpVehicleToLandmark: (landmarkId) => set((state) => {
+    if (!landmarkId) return {};
+    return {
+      autoDrive: false,
+      vehicleSpeed: 0,
+      vehicleSteer: 0,
+      arrivalNotice: { landmarkId },
+      nearbyLandmarkId: landmarkId,
+      selectedLandmarkId: landmarkId,
+      focusPanelOpen: false,
+      modelViewerOpen: false,
+      guidedTourState: 'FOCUS_POI',
+      guidedTourLandmarkId: landmarkId,
+      guidedTourMessage: '已跳转到站点',
+      cameraMode: 'follow',
+      vehicleJumpRequest: { landmarkId, token: (state.vehicleJumpRequest?.token ?? 0) + 1 },
+    };
+  }),
   resetVehicleTour: () => set((state) => ({
     autoDrive: false,
     tourResetToken: state.tourResetToken + 1,
