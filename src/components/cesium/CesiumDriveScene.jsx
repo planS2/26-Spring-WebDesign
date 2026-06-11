@@ -1,148 +1,113 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Cartesian3,
-  Cartographic,
-  buildModuleUrl,
-  Color,
-  createOsmBuildingsAsync,
-  createWorldImageryAsync,
-  createWorldTerrainAsync,
-  DistanceDisplayCondition,
-  EllipsoidGeodesic,
-  HeadingPitchRange,
-  HeightReference,
-  Ion,
-  LabelStyle,
-  Matrix4,
-  Math as CesiumMath,
-  NearFarScalar,
-  Quaternion,
-  Rectangle,
-  sampleTerrainMostDetailed,
-  Transforms,
-  HeadingPitchRoll,
-  Viewer,
-} from 'cesium';
-import 'cesium/Build/Cesium/Widgets/widgets.css';
-import { useKeyboardDrive } from '../../hooks/useKeyboardDrive.js';
 import { useActiveRouteGeo } from '../../hooks/useActiveRouteGeo.js';
 import { landmarks } from '../../data/landmarks.js';
 import { useAppStore } from '../../state/useAppStore.js';
 
-buildModuleUrl.setBaseUrl(import.meta.env.DEV ? '/node_modules/cesium/Build/Cesium/' : '/cesium/');
-
+const CESIUM_VERSION = '1.142';
+const DEV_CESIUM_BASE = '/node_modules/cesium/Build/Cesium/';
+const PROD_CESIUM_BASE = '/cesium/';
+const CDN_CESIUM_BASE = `https://cdn.jsdelivr.net/npm/cesium@${CESIUM_VERSION}/Build/Cesium/`;
 const START_PROGRESS = 0;
 const UI_SYNC_INTERVAL_MS = 100;
 const DISPLAY_ROUTE_MAX_POINTS = 12000;
-const ROUTE_SIMPLIFY_TOLERANCE_DEGREES = 0.000045;
-const PASSED_CHUNK_KM = 5;
-const ACTIVE_TRAIL_UPDATE_KM = 0.4;
+const BASE_TIME_SCALE = 60;
 const NORMAL_SPEED_KMH = 100;
 const BOOST_SPEED_KMH = 175;
-const NORMAL_TIME_SCALE = 12;
-const BOOST_TIME_SCALE = 24;
-const BUILDING_CACHE_BYTES = 128 * 1024 * 1024;
-const BUILDING_OVERFLOW_BYTES = 48 * 1024 * 1024;
-const ITALY_RECTANGLE = Rectangle.fromDegrees(6.2, 36.1, 19, 47.6);
-const tempGeodesic = new EllipsoidGeodesic();
+const ACTIVE_TRAIL_PROGRESS_WINDOW = 0.018;
+const ITALY_VIEW_RECTANGLE = [6.2, 36.1, 19, 47.6];
 
-function routePositions(points) {
-  return points.map(({ lon, lat }) => Cartesian3.fromDegrees(lon, lat));
+let cesiumRuntimePromise = null;
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[data-cesium-runtime="${src}"]`);
+    if (existing) {
+      existing.addEventListener('load', resolve, { once: true });
+      existing.addEventListener('error', reject, { once: true });
+      if (window.Cesium) resolve();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    script.dataset.cesiumRuntime = src;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`无法加载 Cesium 脚本：${src}`));
+    document.head.appendChild(script);
+  });
 }
 
-function pointToSegmentDistanceSquared(point, start, end) {
-  const latitudeScale = Math.cos(CesiumMath.toRadians(point.lat));
-  const segmentX = (end.lon - start.lon) * latitudeScale;
-  const segmentY = end.lat - start.lat;
-  const pointX = (point.lon - start.lon) * latitudeScale;
-  const pointY = point.lat - start.lat;
-  const segmentLengthSquared = segmentX * segmentX + segmentY * segmentY;
-  if (segmentLengthSquared === 0) return pointX * pointX + pointY * pointY;
-  const fraction = Math.max(
-    0,
-    Math.min(1, (pointX * segmentX + pointY * segmentY) / segmentLengthSquared),
-  );
-  const dx = pointX - segmentX * fraction;
-  const dy = pointY - segmentY * fraction;
-  return dx * dx + dy * dy;
+function ensureStylesheet(href) {
+  if (document.querySelector(`link[data-cesium-widgets="${href}"]`)) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = href;
+  link.dataset.cesiumWidgets = href;
+  document.head.appendChild(link);
 }
 
-function simplifyRoutePoints(points, tolerance) {
-  if (points.length <= 2) return points;
-  const keep = new Uint8Array(points.length);
-  keep[0] = 1;
-  keep[points.length - 1] = 1;
-  const stack = [[0, points.length - 1]];
-  const toleranceSquared = tolerance * tolerance;
-
-  while (stack.length) {
-    const [startIndex, endIndex] = stack.pop();
-    let furthestIndex = -1;
-    let furthestDistance = toleranceSquared;
-    for (let index = startIndex + 1; index < endIndex; index += 1) {
-      const distance = pointToSegmentDistanceSquared(
-        points[index],
-        points[startIndex],
-        points[endIndex],
-      );
-      if (distance > furthestDistance) {
-        furthestDistance = distance;
-        furthestIndex = index;
+async function loadCesiumRuntime() {
+  if (window.Cesium) return window.Cesium;
+  if (!cesiumRuntimePromise) {
+    cesiumRuntimePromise = (async () => {
+      const localBase = import.meta.env.DEV ? DEV_CESIUM_BASE : PROD_CESIUM_BASE;
+      let cesiumBaseUrl = localBase;
+      ensureStylesheet(`${localBase}Widgets/widgets.css`);
+      try {
+        await loadScript(`${localBase}Cesium.js`);
+      } catch {
+        cesiumBaseUrl = CDN_CESIUM_BASE;
+        ensureStylesheet(`${CDN_CESIUM_BASE}Widgets/widgets.css`);
+        await loadScript(`${CDN_CESIUM_BASE}Cesium.js`);
       }
-    }
-    if (furthestIndex >= 0) {
-      keep[furthestIndex] = 1;
-      stack.push([startIndex, furthestIndex], [furthestIndex, endIndex]);
-    }
+      if (!window.Cesium) throw new Error('Cesium runtime loaded but window.Cesium is unavailable.');
+      window.Cesium.buildModuleUrl.setBaseUrl(cesiumBaseUrl);
+      return window.Cesium;
+    })();
   }
+  return cesiumRuntimePromise;
+}
 
-  return points.filter((_, index) => keep[index]);
+function routePositions(Cesium, points) {
+  return points.map(({ lon, lat }) => Cesium.Cartesian3.fromDegrees(lon, lat));
 }
 
 function buildDisplayPoints(route) {
   if (route.points.length <= DISPLAY_ROUTE_MAX_POINTS) return route.points;
-  let tolerance = ROUTE_SIMPLIFY_TOLERANCE_DEGREES;
-  let simplified = simplifyRoutePoints(route.points, tolerance);
-  while (simplified.length > DISPLAY_ROUTE_MAX_POINTS) {
-    tolerance *= 1.35;
-    simplified = simplifyRoutePoints(route.points, tolerance);
-  }
-  return simplified;
+  const step = Math.ceil(route.points.length / DISPLAY_ROUTE_MAX_POINTS);
+  return route.points.filter((_, index) => index % step === 0 || index === route.points.length - 1);
+}
+
+function routeHeading(Cesium, route, progress) {
+  const current = route.sample(progress);
+  const ahead = route.sample(Math.min(1, progress + Math.max(0.00008, 0.25 / route.totalKm)));
+  const geodesic = new Cesium.EllipsoidGeodesic(
+    Cesium.Cartographic.fromDegrees(current.lon, current.lat),
+    Cesium.Cartographic.fromDegrees(ahead.lon, ahead.lat),
+  );
+  return geodesic.startHeading;
 }
 
 function distanceKm(a, b) {
-  tempGeodesic.setEndPoints(
-    Cartographic.fromDegrees(a.lon, a.lat),
-    Cartographic.fromDegrees(b.lon, b.lat),
-  );
-  return tempGeodesic.surfaceDistance / 1000;
-}
-
-function formatSceneError(error) {
-  if (!error) return 'Cesium scene failed to load.';
-  return error instanceof Error ? error.message : String(error);
-}
-
-function routeHeading(route, progress) {
-  const current = route.sample(progress);
-  const lookAheadProgress = Math.min(1, progress + Math.max(0.00008, 0.25 / route.totalKm));
-  const ahead = route.sample(lookAheadProgress);
-  tempGeodesic.setEndPoints(
-    Cartographic.fromDegrees(current.lon, current.lat),
-    Cartographic.fromDegrees(ahead.lon, ahead.lat),
-  );
-  return tempGeodesic.startHeading;
+  const toRad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * toRad;
+  const dLon = (b.lon - a.lon) * toRad;
+  const lat1 = a.lat * toRad;
+  const lat2 = b.lat * toRad;
+  const sinLat = Math.sin(dLat / 2);
+  const sinLon = Math.sin(dLon / 2);
+  return 6371.0088 * 2 * Math.asin(Math.sqrt(
+    sinLat * sinLat + Math.cos(lat1) * Math.cos(lat2) * sinLon * sinLon,
+  ));
 }
 
 function landmarkProgress(route, landmark) {
   let bestProgress = 0;
   let bestDistance = Number.POSITIVE_INFINITY;
-  for (let index = 0; index <= 500; index += 1) {
-    const progress = index / 500;
+  for (let index = 0; index <= 600; index += 1) {
+    const progress = index / 600;
     const point = route.sample(progress);
-    const dx = (point.lon - landmark.lon) * Math.cos(CesiumMath.toRadians(landmark.lat));
-    const dy = point.lat - landmark.lat;
-    const distance = dx * dx + dy * dy;
+    const distance = distanceKm(point, landmark);
     if (distance < bestDistance) {
       bestDistance = distance;
       bestProgress = progress;
@@ -151,64 +116,90 @@ function landmarkProgress(route, landmark) {
   return bestProgress;
 }
 
-function getVisibleLandmarks(indexedLandmarks, progress) {
-  if (!indexedLandmarks.length) return [];
-  let nextIndex = indexedLandmarks.findIndex((item) => item.progress >= progress - 0.003);
-  if (nextIndex < 0) nextIndex = indexedLandmarks.length - 1;
-  return indexedLandmarks
-    .filter((_, index) => Math.abs(index - nextIndex) <= 1)
-    .map((item) => item.landmark);
+function progressRangePositions(Cesium, route, startProgress, endProgress, count = 96) {
+  const safeStart = Math.max(0, Math.min(1, startProgress));
+  const safeEnd = Math.max(safeStart, Math.min(1, endProgress));
+  return Array.from({ length: Math.max(2, count) }, (_, index) => {
+    const fraction = index / (Math.max(2, count) - 1);
+    const point = route.sample(safeStart + (safeEnd - safeStart) * fraction);
+    return Cesium.Cartesian3.fromDegrees(point.lon, point.lat, 18);
+  });
 }
 
-function getStreamingPressure(queue, wasPaused) {
-  const paused = wasPaused ? queue > 70 : queue > 120;
-  if (paused) return { level: 'critical', factor: 0, paused: true };
-  if (queue > 55) return { level: 'high', factor: 0.3, paused: false };
-  if (queue > 18) return { level: 'medium', factor: 0.65, paused: false };
-  return { level: 'low', factor: 1, paused: false };
+function rectangleForRoute(Cesium, route) {
+  const lons = route.points.map((point) => point.lon);
+  const lats = route.points.map((point) => point.lat);
+  if (!lons.length || !lats.length) return Cesium.Rectangle.fromDegrees(...ITALY_VIEW_RECTANGLE);
+  const west = Math.min(...lons) - 0.45;
+  const south = Math.min(...lats) - 0.35;
+  const east = Math.max(...lons) + 0.45;
+  const north = Math.max(...lats) + 0.35;
+  return Cesium.Rectangle.fromDegrees(west, south, east, north);
 }
 
-function addLandmarkEntity(viewer, landmark, highlighted) {
-  const common = {
+function formatSceneError(error) {
+  if (!error) return 'Cesium scene failed to load.';
+  return error instanceof Error ? error.message : String(error);
+}
+
+function addLandmarkEntity(Cesium, viewer, landmark, highlighted) {
+  return viewer.entities.add({
     id: `landmark-${landmark.id}`,
-    position: Cartesian3.fromDegrees(landmark.lon, landmark.lat),
+    position: Cesium.Cartesian3.fromDegrees(landmark.lon, landmark.lat, 45),
     point: {
-      pixelSize: highlighted ? 18 : 13,
-      color: highlighted ? Color.fromCssColorString('#f0d490') : Color.fromCssColorString('#d8c09a'),
-      outlineColor: Color.WHITE,
-      outlineWidth: 3,
-      heightReference: HeightReference.CLAMP_TO_GROUND,
+      pixelSize: highlighted ? 19 : 14,
+      color: highlighted ? Cesium.Color.fromCssColorString('#f0d490') : Cesium.Color.fromCssColorString('#7ed8ff'),
+      outlineColor: Cesium.Color.WHITE,
+      outlineWidth: highlighted ? 4 : 2,
+      heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
     },
     label: {
       text: landmark.name,
-      font: '600 15px sans-serif',
-      fillColor: Color.WHITE,
-      outlineColor: Color.fromCssColorString('#18324a'),
+      font: highlighted ? '700 16px sans-serif' : '600 14px sans-serif',
+      fillColor: Cesium.Color.WHITE,
+      outlineColor: Cesium.Color.fromCssColorString('#17324b'),
       outlineWidth: 4,
-      style: LabelStyle.FILL_AND_OUTLINE,
-      pixelOffset: { x: 0, y: -32 },
-      distanceDisplayCondition: new DistanceDisplayCondition(0, 28000),
-      scaleByDistance: new NearFarScalar(1500, 1.1, 28000, 0.55),
-      disableDepthTestDistance: 16000,
+      style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+      pixelOffset: new Cesium.Cartesian2(0, -34),
+      distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 90000),
+      scaleByDistance: new Cesium.NearFarScalar(2000, 1.1, 90000, 0.55),
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
     },
-  };
+  });
+}
 
-  if (landmark.modelPath) {
-    return viewer.entities.add({
-      ...common,
-      model: {
-        uri: landmark.modelPath,
-        minimumPixelSize: highlighted ? 74 : 48,
-        maximumScale: 180,
-        heightReference: HeightReference.CLAMP_TO_GROUND,
-        runAnimations: false,
-        color: Color.WHITE,
-      },
-    });
+function updateLandmarkHighlight(Cesium, landmarkEntities, activeId) {
+  for (const [id, entity] of landmarkEntities) {
+    const active = id === activeId;
+    entity.point.pixelSize = active ? 19 : 14;
+    entity.point.color = active ? Cesium.Color.fromCssColorString('#f0d490') : Cesium.Color.fromCssColorString('#7ed8ff');
+    entity.point.outlineWidth = active ? 4 : 2;
+    entity.label.font = active ? '700 16px sans-serif' : '600 14px sans-serif';
   }
+}
 
-  return viewer.entities.add(common);
+async function createWorldTerrain(Cesium) {
+  if (Cesium.createWorldTerrainAsync) {
+    return Cesium.createWorldTerrainAsync({ requestWaterMask: true, requestVertexNormals: true });
+  }
+  if (Cesium.createWorldTerrain) return Cesium.createWorldTerrain({ requestWaterMask: true, requestVertexNormals: true });
+  if (Cesium.CesiumTerrainProvider?.fromIonAssetId) return Cesium.CesiumTerrainProvider.fromIonAssetId(1, { requestVertexNormals: true });
+  return undefined;
+}
+
+async function createWorldImagery(Cesium) {
+  if (Cesium.createWorldImageryAsync) return Cesium.createWorldImageryAsync();
+  if (Cesium.createWorldImagery) return Cesium.createWorldImagery();
+  if (Cesium.IonImageryProvider?.fromAssetId) return Cesium.IonImageryProvider.fromAssetId(2);
+  return undefined;
+}
+
+async function createOsmBuildings(Cesium) {
+  if (Cesium.createOsmBuildingsAsync) return Cesium.createOsmBuildingsAsync();
+  if (Cesium.createOsmBuildings) return Cesium.createOsmBuildings();
+  if (Cesium.Cesium3DTileset?.fromIonAssetId) return Cesium.Cesium3DTileset.fromIonAssetId(96188);
+  return null;
 }
 
 export function CesiumDriveScene({ isStarted }) {
@@ -216,294 +207,260 @@ export function CesiumDriveScene({ isStarted }) {
   const viewerRef = useRef(null);
   const isStartedRef = useRef(isStarted);
   const route = useActiveRouteGeo();
-  const controls = useKeyboardDrive();
-  const [streamingState, setStreamingState] = useState({
-    queue: 0,
-    level: 'low',
-    paused: false,
-  });
-  const [sceneError, setSceneError] = useState('');
-  const cesiumReady = useAppStore((state) => state.cesiumStatus.ready);
-  const routeKey = `${route.signature}-${useAppStore((state) => state.tourResetToken)}`;
-  const setCesiumStatus = useAppStore((state) => state.setCesiumStatus);
   const displayPoints = useMemo(() => buildDisplayPoints(route), [route]);
-  const routeCartesian = useMemo(() => routePositions(displayPoints), [displayPoints]);
+  const [sceneError, setSceneError] = useState('');
+  const [loadingLabel, setLoadingLabel] = useState('正在加载 Cesium 真实地图');
+  const setCesiumStatus = useAppStore((state) => state.setCesiumStatus);
 
   useEffect(() => {
     isStartedRef.current = isStarted;
   }, [isStarted]);
 
   useEffect(() => {
-    if (!containerRef.current) return undefined;
+    const container = containerRef.current;
+    if (!container) return undefined;
 
     let disposed = false;
+    let viewer = null;
     let tickRemove = null;
+    let clickHandler = null;
     let buildings = null;
-    let currentTileQueue = 0;
-    const viewer = new Viewer(containerRef.current, {
-      animation: false,
-      timeline: false,
-      baseLayerPicker: false,
-      geocoder: false,
-      homeButton: false,
-      sceneModePicker: false,
-      navigationHelpButton: false,
-      fullscreenButton: false,
-      infoBox: false,
-      selectionIndicator: false,
-      shouldAnimate: true,
-      useBrowserRecommendedResolution: true,
-    });
-    viewerRef.current = viewer;
-    viewer.resolutionScale = window.innerWidth < 900 ? 0.78 : 0.9;
-    viewer.scene.globe.depthTestAgainstTerrain = true;
-    viewer.scene.globe.enableLighting = true;
-    viewer.scene.globe.showGroundAtmosphere = true;
-    viewer.scene.globe.maximumScreenSpaceError = 5;
-    viewer.scene.globe.tileCacheSize = 70;
-    viewer.scene.globe.preloadAncestors = true;
-    viewer.scene.globe.preloadSiblings = false;
-    viewer.scene.globe.loadingDescendantLimit = 20;
-    viewer.scene.skyAtmosphere.show = true;
-    viewer.scene.fog.enabled = true;
-    viewer.scene.fog.density = 0.00018;
-    viewer.scene.screenSpaceCameraController.enableCollisionDetection = true;
-    viewer.scene.screenSpaceCameraController.minimumZoomDistance = 12;
-    viewer.imageryLayers.removeAll();
+    let progress = START_PROGRESS;
+    let previousProgress = START_PROGRESS;
+    let speedKmh = 0;
+    let targetSpeedKmh = 0;
+    let lastTime = performance.now();
+    let lastUiSync = 0;
+    let handledJumpToken = useAppStore.getState().vehicleJumpRequest?.token ?? null;
+    let currentCameraMode = null;
+    let currentHighlightId = null;
+    let focusedCameraId = null;
+    let smoothedHeading = 0;
+    const routeStops = route.routeIds.map((id) => landmarks.find((item) => item.id === id)).filter(Boolean);
+    const indexedLandmarks = routeStops
+      .map((landmark) => ({ id: landmark.id, landmark, progress: landmarkProgress(route, landmark) }))
+      .sort((a, b) => a.progress - b.progress);
 
-    const removeTileListener = viewer.scene.globe.tileLoadProgressEvent.addEventListener((count) => {
-      currentTileQueue = count;
-    });
-    const removeRenderErrorListener = viewer.scene.renderError.addEventListener((_scene, error) => {
-      if (!disposed) setSceneError(formatSceneError(error));
-    });
+    function syncRouteState(Cesium, routeContextPoint, routeContextProgress) {
+      const state = useAppStore.getState();
+      const nearest = indexedLandmarks.reduce((best, item) => {
+        const candidateDistance = Math.abs(item.progress - routeContextProgress);
+        return candidateDistance < best.distance ? { ...item, distance: candidateDistance } : best;
+      }, { id: null, landmark: null, distance: Number.POSITIVE_INFINITY });
+      state.setNearbyLandmarkId(nearest.distance <= 0.025 ? nearest.id : null);
+      const currentIndex = Math.max(0, indexedLandmarks.findIndex((item) => item.progress >= routeContextProgress - 0.002));
+      state.setVehicleState({
+        vehicleSpeed: Math.abs(speedKmh),
+        vehicleSteer: 0,
+        routeProgress: routeContextProgress,
+        routeDay: Math.min(3, Math.floor(routeContextProgress * 3) + 1),
+        routeHour: 7 + ((routeContextProgress * 36) % 12),
+        routeContext: {
+          point: { id: `cesium-${routeContextPoint.index}`, landmarkId: nearest.id, roadType: 'Cesium 真实地图' },
+          segment: { id: 'cesium-route', type: 'scenic', speedLimit: NORMAL_SPEED_KMH, trafficState: 'normal' },
+          profile: { label: 'Cesium 实景路线', surfaceLabel: 'World Terrain / OSM Buildings', color: '#7ed8ff' },
+          currentStopId: indexedLandmarks[currentIndex]?.id ?? indexedLandmarks.at(-1)?.id ?? null,
+        },
+      });
+    }
 
     async function initialize() {
       try {
         const token = import.meta.env.VITE_CESIUM_ION_TOKEN?.trim();
-        if (!token) throw new Error('VITE_CESIUM_ION_TOKEN is not configured.');
-        Ion.defaultAccessToken = token;
+        if (!token) {
+          throw new Error('缺少 VITE_CESIUM_ION_TOKEN。请在 .env.local 中配置 Cesium ion token 后重新启动开发服务器。');
+        }
+
+        setSceneError('');
+        setLoadingLabel('正在加载 Cesium runtime');
         setCesiumStatus({ terrain: 'loading', imagery: 'loading', buildings: 'loading', ready: false, error: '' });
+        const Cesium = await loadCesiumRuntime();
+        if (disposed) return;
+        Cesium.Ion.defaultAccessToken = token;
+        smoothedHeading = routeHeading(Cesium, route, START_PROGRESS);
+
+        setLoadingLabel('正在加载全球影像与 World Terrain');
+        viewer = new Cesium.Viewer(container, {
+          animation: false,
+          timeline: false,
+          baseLayerPicker: false,
+          geocoder: false,
+          homeButton: false,
+          sceneModePicker: false,
+          navigationHelpButton: false,
+          fullscreenButton: false,
+          infoBox: false,
+          selectionIndicator: false,
+          shouldAnimate: true,
+          useBrowserRecommendedResolution: true,
+        });
+        viewerRef.current = viewer;
+        viewer.scene.globe.depthTestAgainstTerrain = true;
+        viewer.scene.globe.enableLighting = true;
+        viewer.scene.globe.showGroundAtmosphere = true;
+        viewer.scene.fog.enabled = true;
+        viewer.scene.fog.density = 0.00016;
+        viewer.scene.screenSpaceCameraController.enableCollisionDetection = true;
+        viewer.scene.screenSpaceCameraController.minimumZoomDistance = 30;
+        viewer.imageryLayers.removeAll();
 
         const [terrainProvider, imageryProvider] = await Promise.all([
-          createWorldTerrainAsync({ requestWaterMask: true, requestVertexNormals: true }),
-          createWorldImageryAsync(),
+          createWorldTerrain(Cesium),
+          createWorldImagery(Cesium),
         ]);
         if (disposed) return;
-        viewer.terrainProvider = terrainProvider;
-        viewer.imageryLayers.addImageryProvider(imageryProvider);
-        setCesiumStatus({ terrain: 'ready', imagery: 'ready' });
+        if (terrainProvider) viewer.terrainProvider = terrainProvider;
+        if (imageryProvider) viewer.imageryLayers.addImageryProvider(imageryProvider);
+        setCesiumStatus({ terrain: terrainProvider ? 'ready' : 'error', imagery: imageryProvider ? 'ready' : 'error' });
 
-        const first = route.sample(START_PROGRESS);
-        const sampled = await sampleTerrainMostDetailed(terrainProvider, [
-          Cartographic.fromDegrees(first.lon, first.lat),
-        ]);
-        if (disposed) return;
-        const startHeight = Number.isFinite(sampled[0]?.height) ? sampled[0].height : 0;
-
+        setLoadingLabel('正在加载 OSM Buildings 与路线图层');
         try {
-          buildings = await createOsmBuildingsAsync({
-            cacheBytes: BUILDING_CACHE_BYTES,
-            maximumCacheOverflowBytes: BUILDING_OVERFLOW_BYTES,
-            maximumScreenSpaceError: 30,
-            dynamicScreenSpaceError: true,
-            dynamicScreenSpaceErrorFactor: 36,
-            progressiveResolutionHeightFraction: 0.2,
-            foveatedScreenSpaceError: true,
-            foveatedConeSize: 0.15,
-            foveatedTimeDelay: 0.6,
-            cullRequestsWhileMoving: true,
-            cullRequestsWhileMovingMultiplier: 80,
-            preloadFlightDestinations: true,
-          });
-          if (!disposed) {
+          buildings = await createOsmBuildings(Cesium);
+          if (buildings && !disposed) {
+            buildings.maximumScreenSpaceError = 28;
             viewer.scene.primitives.add(buildings);
             setCesiumStatus({ buildings: 'ready' });
           }
         } catch {
-          if (!disposed) setCesiumStatus({ buildings: 'error' });
+          setCesiumStatus({ buildings: 'error' });
         }
 
-        viewer.entities.add({
-          id: 'route-base',
+        const routeCartesian = routePositions(Cesium, displayPoints);
+        const baseRoute = viewer.entities.add({
+          id: 'route-unfinished',
           polyline: {
             positions: routeCartesian,
-            width: 6,
-            material: Color.fromCssColorString('#f3e9c2').withAlpha(0.9),
+            width: 5,
+            material: Cesium.Color.fromCssColorString('#91b8c7').withAlpha(0.52),
             clampToGround: true,
           },
         });
-        const activePassedRoute = viewer.entities.add({
-          id: 'route-passed-active',
+        const passedRoute = viewer.entities.add({
+          id: 'route-finished',
           polyline: {
-            positions: routeCartesian.slice(0, 2),
-            width: 6,
-            material: Color.fromCssColorString('#d66f4d').withAlpha(0.96),
+            positions: progressRangePositions(Cesium, route, 0, 0.0001, 2),
+            width: 7,
+            material: Cesium.Color.fromCssColorString('#f0b46a').withAlpha(0.96),
             clampToGround: true,
           },
         });
-        const initialPosition = Cartesian3.fromDegrees(first.lon, first.lat, startHeight + 0.65);
-        const initialOrientation = Transforms.headingPitchRollQuaternion(
-          initialPosition,
-          new HeadingPitchRoll(routeHeading(route, 0), 0, 0),
-        );
+        const currentRoute = viewer.entities.add({
+          id: 'route-current-segment',
+          polyline: {
+            positions: progressRangePositions(Cesium, route, 0, ACTIVE_TRAIL_PROGRESS_WINDOW, 32),
+            width: 10,
+            material: Cesium.Color.fromCssColorString('#7ed8ff').withAlpha(0.92),
+            clampToGround: true,
+          },
+        });
+
+        const first = route.sample(START_PROGRESS);
         const vehicle = viewer.entities.add({
           id: 'tour-vehicle',
-          position: initialPosition,
-          orientation: initialOrientation,
-          model: {
-            uri: '/models/low-poly_truck_car_drifter.glb',
-            scale: 0.18,
-            minimumPixelSize: 18,
-            maximumScale: 1.4,
-            heightReference: HeightReference.RELATIVE_TO_GROUND,
+          position: Cesium.Cartesian3.fromDegrees(first.lon, first.lat, 80),
+          point: {
+            pixelSize: 20,
+            color: Cesium.Color.fromCssColorString('#ffcf73'),
+            outlineColor: Cesium.Color.fromCssColorString('#1a2f45'),
+            outlineWidth: 4,
+            heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          },
+          label: {
+            text: '导览车',
+            font: '700 13px sans-serif',
+            fillColor: Cesium.Color.WHITE,
+            outlineColor: Cesium.Color.fromCssColorString('#1a2f45'),
+            outlineWidth: 4,
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            pixelOffset: new Cesium.Cartesian2(0, -30),
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
         });
 
-        const indexedLandmarks = route.routeIds
-          .map((id) => landmarks.find((item) => item.id === id))
-          .filter(Boolean)
-          .map((landmark) => ({
-            landmark,
-            id: landmark.id,
-            progress: landmarkProgress(route, landmark),
-          }))
-          .sort((a, b) => a.progress - b.progress);
         const landmarkEntities = new Map();
-        const scratchPosition = new Cartesian3();
-        const scratchOrientation = new Quaternion();
-        const scratchHpr = new HeadingPitchRoll();
-        let progress = START_PROGRESS;
-        let previousProgress = START_PROGRESS;
-        let furthestProgress = START_PROGRESS;
-        let speedKmh = 0;
-        let targetSpeedKmh = 0;
-        let effectiveTimeScale = 0;
-        let lastTime = performance.now();
-        let lastUiSync = 0;
-        let lastTrailDistanceKm = -ACTIVE_TRAIL_UPDATE_KM;
-        let completedChunkCount = 0;
-        let lastLandmarkKey = '';
-        let smoothedHeading = routeHeading(route, progress);
-        let smoothedRange = 1500;
-        let mapModeApplied = false;
-        let focusModeId = null;
-        let previousCameraMode = 'follow';
-        let pressure = getStreamingPressure(0, false);
+        routeStops.forEach((landmark, index) => {
+          landmarkEntities.set(landmark.id, addLandmarkEntity(Cesium, viewer, landmark, index === 0));
+        });
 
-        const positionsForProgressRange = (startProgress, endProgress) => {
-          const distanceKm = Math.max(0, endProgress - startProgress) * route.totalKm;
-          const pointCount = Math.max(2, Math.min(160, Math.ceil(distanceKm / 0.04) + 1));
-          return Array.from({ length: pointCount }, (_, index) => {
-            const fraction = pointCount === 1 ? 0 : index / (pointCount - 1);
-            const point = route.sample(
-              startProgress + (endProgress - startProgress) * fraction,
-            );
-            return Cartesian3.fromDegrees(point.lon, point.lat);
-          });
-        };
-
-        const updatePassedRoute = () => {
-          const passedDistanceKm = furthestProgress * route.totalKm;
-          const requiredCompletedChunks = Math.floor(passedDistanceKm / PASSED_CHUNK_KM);
-          while (completedChunkCount < requiredCompletedChunks) {
-            const startProgress = (completedChunkCount * PASSED_CHUNK_KM) / route.totalKm;
-            const endProgress = Math.min(1, ((completedChunkCount + 1) * PASSED_CHUNK_KM) / route.totalKm);
-            const entity = viewer.entities.add({
-              id: `route-passed-${completedChunkCount}`,
-              polyline: {
-                positions: positionsForProgressRange(startProgress, endProgress),
-                width: 6,
-                material: Color.fromCssColorString('#d66f4d').withAlpha(0.96),
-                clampToGround: true,
-              },
-            });
-            completedChunkCount += 1;
+        clickHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        clickHandler.setInputAction((movement) => {
+          const picked = viewer.scene.pick(movement.position);
+          const pickedId = picked?.id?.id;
+          if (typeof pickedId === 'string' && pickedId.startsWith('landmark-')) {
+            const landmarkId = pickedId.replace('landmark-', '');
+            useAppStore.getState().jumpVehicleToLandmark(landmarkId);
           }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-          if (
-            passedDistanceKm - lastTrailDistanceKm >= ACTIVE_TRAIL_UPDATE_KM
-            || furthestProgress >= 1
-          ) {
-            lastTrailDistanceKm = passedDistanceKm;
-            const activeStartProgress = Math.min(
-              furthestProgress,
-              (completedChunkCount * PASSED_CHUNK_KM) / route.totalKm,
-            );
-            activePassedRoute.polyline.positions.setValue(
-              positionsForProgressRange(activeStartProgress, furthestProgress),
-            );
-          }
-        };
-
-        const applyLandmarks = (cameraMode) => {
-          const visible = cameraMode === 'map'
-            ? indexedLandmarks.map((item) => item.landmark)
-            : getVisibleLandmarks(indexedLandmarks, progress);
-          const key = visible.map((item) => item.id).join('|');
-          if (key === lastLandmarkKey) return;
-          lastLandmarkKey = key;
-          const visibleIds = new Set(visible.map((item) => item.id));
-          for (const [id, entity] of landmarkEntities) {
-            if (!visibleIds.has(id)) {
-              viewer.entities.remove(entity);
-              landmarkEntities.delete(id);
-            }
-          }
-          visible.forEach((landmark, index) => {
-            if (!landmarkEntities.has(landmark.id)) {
-              landmarkEntities.set(landmark.id, addLandmarkEntity(viewer, landmark, index === 1));
-            }
-          });
-        };
-
-        applyLandmarks(useAppStore.getState().cameraMode);
-        setCesiumStatus({ ready: true });
+        const routeRectangle = rectangleForRoute(Cesium, route);
+        viewer.camera.flyTo({ destination: routeRectangle, duration: 1.1 });
+        setCesiumStatus({ ready: true, error: '' });
+        setLoadingLabel('');
 
         tickRemove = viewer.clock.onTick.addEventListener(() => {
-          if (disposed) return;
+          if (disposed || !viewer || viewer.isDestroyed()) return;
           const now = performance.now();
           const delta = Math.min((now - lastTime) / 1000, 0.08);
           lastTime = now;
           const state = useAppStore.getState();
+          const inputForward = false;
+          const inputBackward = false;
+          const inputBoost = false;
           const routeLocked = state.focusPanelOpen || state.modelViewerOpen;
-          const input = controls.current;
-          const hasManualInput = input.forward || input.backward;
-          if (routeLocked || (hasManualInput && state.autoDrive)) state.setAutoDrive(false);
+          const jumpRequest = state.vehicleJumpRequest;
 
-          if (!isStartedRef.current || routeLocked || !state.cesiumStatus.ready) {
+          if (jumpRequest?.token && handledJumpToken !== jumpRequest.token) {
+            const station = indexedLandmarks.find((item) => item.id === jumpRequest.landmarkId);
+            progress = Math.max(0, Math.min(1, station?.progress ?? landmarkProgress(route, { lon: route.sample(0).lon, lat: route.sample(0).lat })));
+            previousProgress = progress;
+            speedKmh = 0;
             targetSpeedKmh = 0;
-          } else if (state.autoDrive || input.forward) {
-            targetSpeedKmh = input.boost ? BOOST_SPEED_KMH : NORMAL_SPEED_KMH;
-          } else if (input.backward) {
-            targetSpeedKmh = input.boost ? -36 : -22;
+            handledJumpToken = jumpRequest.token;
+            const target = station?.landmark ?? landmarks.find((item) => item.id === jumpRequest.landmarkId);
+            if (target) {
+              viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(target.lon, target.lat, 1800),
+                orientation: { heading: routeHeading(Cesium, route, progress), pitch: Cesium.Math.toRadians(-48), roll: 0 },
+                duration: 0.85,
+              });
+            }
+          }
+
+          if (!isStartedRef.current || routeLocked) {
+            targetSpeedKmh = 0;
+          } else if (state.autoDrive || inputForward) {
+            targetSpeedKmh = inputBoost ? BOOST_SPEED_KMH : NORMAL_SPEED_KMH;
+          } else if (inputBackward) {
+            targetSpeedKmh = inputBoost ? -36 : -22;
           } else {
             targetSpeedKmh = 0;
           }
 
-          const acceleration = Math.abs(targetSpeedKmh) > Math.abs(speedKmh)
-            ? input.boost ? 90 : 40
-            : 52;
+          const acceleration = Math.abs(targetSpeedKmh) > Math.abs(speedKmh) ? 44 : 58;
           const maxDelta = acceleration * delta;
           speedKmh += Math.max(-maxDelta, Math.min(maxDelta, targetSpeedKmh - speedKmh));
           if (Math.abs(speedKmh) < 0.05) speedKmh = 0;
 
-          const buildingQueue = buildings
-            ? (buildings.statistics?.numberOfPendingRequests ?? 0)
-              + (buildings.statistics?.numberOfTilesProcessing ?? 0)
-            : 0;
-          pressure = getStreamingPressure(currentTileQueue + buildingQueue, pressure.paused);
-          const requestedTimeScale = input.boost ? BOOST_TIME_SCALE : NORMAL_TIME_SCALE;
-          const targetTimeScale = requestedTimeScale * pressure.factor;
-          effectiveTimeScale += (targetTimeScale - effectiveTimeScale) * (1 - Math.exp(-delta * 0.8));
-          if (pressure.paused && effectiveTimeScale < 0.15) effectiveTimeScale = 0;
-
           previousProgress = progress;
           progress = Math.max(0, Math.min(
             1,
-            progress + (speedKmh / Math.max(route.distanceKm, 1) / 3600) * effectiveTimeScale * delta,
+            progress + (speedKmh / Math.max(route.distanceKm, 1) / 3600) * BASE_TIME_SCALE * (state.autoDrive ? state.guidePlaybackRate : 1) * delta,
           ));
-          furthestProgress = Math.max(furthestProgress, progress);
+
+          const crossedStop = indexedLandmarks.find((stop) => (
+            state.autoDrive
+            && previousProgress < stop.progress
+            && progress >= stop.progress
+            && !state.arrivedLandmarkIds.includes(stop.id)
+            && state.arrivalNotice?.landmarkId !== stop.id
+          ));
+          if (crossedStop) {
+            speedKmh = 0;
+            targetSpeedKmh = 0;
+            state.showArrivalNotice(crossedStop.id);
+          }
+
           if (progress >= 1 && speedKmh > 0) {
             speedKmh = 0;
             state.setAutoDrive(false);
@@ -511,172 +468,89 @@ export function CesiumDriveScene({ isStarted }) {
           }
 
           const point = route.sample(progress);
-          const heading = routeHeading(route, progress);
-          Cartesian3.fromDegrees(point.lon, point.lat, 0.65, undefined, scratchPosition);
-          scratchHpr.heading = heading;
-          scratchHpr.pitch = 0;
-          scratchHpr.roll = 0;
-          Transforms.headingPitchRollQuaternion(
-            scratchPosition,
-            scratchHpr,
-            undefined,
-            undefined,
-            scratchOrientation,
-          );
-          vehicle.position.setValue(scratchPosition);
-          vehicle.orientation.setValue(scratchOrientation);
+          const heading = routeHeading(Cesium, route, progress);
+          const vehiclePosition = Cesium.Cartesian3.fromDegrees(point.lon, point.lat, 85);
+          vehicle.position.setValue(vehiclePosition);
+          passedRoute.polyline.positions.setValue(progressRangePositions(Cesium, route, 0, Math.max(progress, 0.0001), Math.max(2, Math.min(240, Math.ceil(progress * 180)))));
+          currentRoute.polyline.positions.setValue(progressRangePositions(Cesium, route, progress, Math.min(1, progress + ACTIVE_TRAIL_PROGRESS_WINDOW), 36));
 
-          updatePassedRoute();
-          applyLandmarks(state.cameraMode);
-
-          const crossedStop = indexedLandmarks.find((stop) => (
-            previousProgress < stop.progress
-            && progress >= stop.progress
-            && !state.arrivedLandmarkIds.includes(stop.id)
-          ));
-          if (state.autoDrive && crossedStop) {
-            speedKmh = 0;
-            state.showArrivalNotice(crossedStop.id);
+          const highlight = indexedLandmarks.reduce((best, item) => {
+            const distance = Math.abs(item.progress - progress);
+            return distance < best.distance ? { id: item.id, distance } : best;
+          }, { id: null, distance: Number.POSITIVE_INFINITY });
+          if (highlight.id !== currentHighlightId) {
+            currentHighlightId = highlight.id;
+            updateLandmarkHighlight(Cesium, landmarkEntities, currentHighlightId);
           }
 
           if (now - lastUiSync >= UI_SYNC_INTERVAL_MS) {
             lastUiSync = now;
-            const combinedQueue = currentTileQueue + buildingQueue;
-            setStreamingState((current) => (
-              current.queue === combinedQueue
-              && current.level === pressure.level
-              && current.paused === pressure.paused
-                ? current
-                : { queue: combinedQueue, level: pressure.level, paused: pressure.paused }
-            ));
-
-            const settled = Math.abs(speedKmh) < 1 || state.cameraMode === 'focus';
-            viewer.scene.globe.maximumScreenSpaceError = pressure.level === 'critical'
-              ? 7
-              : settled ? 2.75 : 5;
-            if (buildings) {
-              buildings.maximumScreenSpaceError = pressure.level === 'critical'
-                ? 42
-                : settled ? 20 : 30;
-            }
-
-            const currentIndex = Math.max(
-              0,
-              Math.min(route.routeIds.length - 1, Math.floor(progress * route.routeIds.length)),
-            );
-            let nearbyLandmark = null;
-            let nearbyDistance = Number.POSITIVE_INFINITY;
-            for (const { landmark } of indexedLandmarks) {
-              const candidateDistance = distanceKm(point, landmark);
-              if (candidateDistance < nearbyDistance) {
-                nearbyDistance = candidateDistance;
-                nearbyLandmark = landmark;
-              }
-            }
-            state.setNearbyLandmarkId(nearbyDistance <= 5 ? nearbyLandmark?.id ?? null : null);
-            state.setVehicleState({
-              vehicleSpeed: Math.abs(speedKmh),
-              vehicleSteer: 0,
-              routeProgress: progress,
-              routeDay: Math.min(3, Math.floor(progress * 3) + 1),
-              routeHour: 7 + (progress * 36 % 12),
-              routeContext: {
-                point: { id: `cesium-${point.index}`, roadType: '真实道路' },
-                segment: { id: 'cesium-route', type: 'scenic', speedLimit: 110, trafficState: 'normal' },
-                profile: { label: 'Cesium 实景路线', surfaceLabel: '地形贴合道路', color: '#59666b' },
-                currentStopId: route.routeIds[currentIndex],
-              },
-            });
+            syncRouteState(Cesium, point, progress);
           }
 
-          if (state.cameraMode !== previousCameraMode) {
-            if (buildings && (state.cameraMode === 'map' || previousCameraMode === 'map')) {
-              buildings.trimLoadedTiles();
+          if (state.cameraMode !== currentCameraMode) {
+            currentCameraMode = state.cameraMode;
+            if (currentCameraMode === 'map') {
+              viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+              viewer.camera.flyTo({ destination: routeRectangle, duration: 1.0 });
             }
-            previousCameraMode = state.cameraMode;
           }
 
-          if (state.cameraMode === 'map') {
-            if (!mapModeApplied) {
-              mapModeApplied = true;
-              focusModeId = null;
-              viewer.camera.lookAtTransform(Matrix4.IDENTITY);
-              viewer.camera.flyTo({ destination: ITALY_RECTANGLE, duration: 1.2 });
-            }
-            return;
-          }
-
-          mapModeApplied = false;
-          if (state.cameraMode === 'focus' && state.selectedLandmarkId) {
-            if (focusModeId !== state.selectedLandmarkId) {
-              focusModeId = state.selectedLandmarkId;
-              viewer.camera.lookAtTransform(Matrix4.IDENTITY);
-              const landmark = landmarks.find((item) => item.id === state.selectedLandmarkId);
-              if (landmark) {
-                viewer.camera.flyTo({
-                  destination: Cartesian3.fromDegrees(landmark.lon, landmark.lat, 1300),
-                  duration: 1.2,
-                });
-              }
-            }
-            return;
-          }
-          focusModeId = null;
           if (state.cameraMode === 'free') {
-            viewer.camera.lookAtTransform(Matrix4.IDENTITY);
+            focusedCameraId = null;
+            viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
             return;
           }
 
-          const speedRatio = Math.min(Math.abs(speedKmh) / BOOST_SPEED_KMH, 1);
-          const headingDelta = CesiumMath.negativePiToPi(heading - smoothedHeading);
-          smoothedHeading += headingDelta * (1 - Math.exp(-delta * 0.65));
-          const targetRange = 2100 + speedRatio * 900;
-          smoothedRange += (targetRange - smoothedRange) * (1 - Math.exp(-delta * 0.55));
-          viewer.camera.lookAt(
-            scratchPosition,
-            new HeadingPitchRange(smoothedHeading, CesiumMath.toRadians(-52), smoothedRange),
-          );
+          if (state.cameraMode === 'focus' && state.selectedLandmarkId) {
+            const target = landmarks.find((item) => item.id === state.selectedLandmarkId);
+            if (target && focusedCameraId !== state.selectedLandmarkId) {
+              focusedCameraId = state.selectedLandmarkId;
+              viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+              viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(target.lon, target.lat, 1600), duration: 0.9 });
+            }
+            return;
+          }
+
+          if (state.cameraMode === 'follow') {
+            focusedCameraId = null;
+            const headingDelta = Cesium.Math.negativePiToPi(heading - smoothedHeading);
+            smoothedHeading += headingDelta * (1 - Math.exp(-delta * 1.6));
+            const range = 2100 + Math.min(Math.abs(speedKmh) / BOOST_SPEED_KMH, 1) * 900;
+            viewer.camera.lookAt(
+              vehiclePosition,
+              new Cesium.HeadingPitchRange(smoothedHeading, Cesium.Math.toRadians(-50), range),
+            );
+          }
         });
       } catch (error) {
         if (disposed) return;
         const message = formatSceneError(error);
         setSceneError(message);
-        setCesiumStatus({
-          terrain: 'error',
-          imagery: 'error',
-          buildings: 'error',
-          ready: false,
-          error: message,
-        });
+        setLoadingLabel('');
+        setCesiumStatus({ terrain: 'error', imagery: 'error', buildings: 'error', ready: false, error: message });
       }
     }
 
     initialize();
+
     return () => {
       disposed = true;
       if (tickRemove) tickRemove();
-      removeTileListener();
-      removeRenderErrorListener();
-      if (buildings && !buildings.isDestroyed()) buildings.trimLoadedTiles();
-      viewer.destroy();
+      if (clickHandler && !clickHandler.isDestroyed()) clickHandler.destroy();
+      if (buildings?.isDestroyed && !buildings.isDestroyed()) buildings.trimLoadedTiles?.();
+      if (viewer && !viewer.isDestroyed()) viewer.destroy();
       viewerRef.current = null;
     };
-  }, [controls, route, routeCartesian, routeKey, setCesiumStatus]);
-
-  const showInitialLoading = !sceneError && !cesiumReady;
-  const showStreamingPause = !sceneError && cesiumReady && streamingState.paused;
+  }, [displayPoints, route, setCesiumStatus]);
 
   return (
     <div className="cesium-drive-scene">
       <div ref={containerRef} className="cesium-drive-scene__canvas" />
-      {(showInitialLoading || showStreamingPause) && (
-        <div className={`cesium-drive-scene__loading ${showStreamingPause ? 'is-streaming' : ''}`}>
-          <strong>{showStreamingPause ? '正在加载前方地图' : '正在加载意大利地形'}</strong>
-          <span>
-            {streamingState.queue > 0
-              ? `剩余 ${streamingState.queue} 个地图资源`
-              : '正在连接 Cesium ion'}
-          </span>
+      {loadingLabel && !sceneError && (
+        <div className="cesium-drive-scene__loading">
+          <strong>{loadingLabel}</strong>
+          <span>正在连接 Cesium ion、World Terrain、全球影像与 OSM Buildings</span>
         </div>
       )}
       {sceneError && (

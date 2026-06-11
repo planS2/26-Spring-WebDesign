@@ -5,15 +5,12 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 function copyCesiumAssets() {
-  const targets = ['Workers', 'ThirdParty', 'Assets', 'Widgets'];
   return {
     name: 'copy-cesium-assets',
     async closeBundle() {
-      await Promise.all(targets.map(async (target) => {
-        const source = resolve('node_modules/cesium/Build/Cesium', target);
-        if (!existsSync(source)) return;
-        await cp(source, resolve('dist/cesium', target), { recursive: true, force: true });
-      }));
+      const source = resolve('node_modules/cesium/Build/Cesium');
+      if (!existsSync(source)) return;
+      await cp(source, resolve('dist/cesium'), { recursive: true, force: true });
     },
   };
 }
